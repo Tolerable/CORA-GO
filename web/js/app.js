@@ -37,21 +37,20 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function checkPairingStatus() {
-    console.log('[APP] checkPairingStatus called');
     state.paired = localStorage.getItem('cora_paired') === 'true';
     state.anchorId = localStorage.getItem('cora_anchor_id');
     state.userId = localStorage.getItem('cora_user_id');
-    console.log('[APP] paired:', state.paired, 'anchorId:', state.anchorId, 'userId:', state.userId);
+    if (window.debugLog) debugLog('[APP] paired=' + state.paired + ' anchor=' + state.anchorId);
 
     const banner = document.getElementById('pairingBanner');
 
     if (!state.paired) {
-        console.log('[APP] Not paired - showing banner');
+        if (window.debugLog) debugLog('[APP] NOT PAIRED - showing banner');
         if (banner) banner.style.display = 'block';
         addMessage('ai', 'Welcome to CORA-GO! Tap the banner above to pair with your PC.');
         pcInfoEl.innerHTML = '<p class="muted"><a href="pair.html">Pair device to connect</a></p>';
     } else {
-        console.log('[APP] Paired - starting polling');
+        if (window.debugLog) debugLog('[APP] PAIRED - starting poll');
         if (banner) banner.style.display = 'none';
         addMessage('ai', 'CORA-GO ready. Checking PC connection...');
         startPCPolling();
@@ -202,20 +201,18 @@ function toggleVoiceInput() {
 
 // ========== PC STATUS ==========
 function startPCPolling() {
-    console.log('[APP] startPCPolling called');
+    if (window.debugLog) debugLog('[APP] startPCPolling');
     Relay.startPolling(updatePCStatus, 5000);
 }
 
 function updatePCStatus(status) {
-    console.log('[APP] updatePCStatus called with:', status);
     const online = status && !status.error && status.online;
-    console.log('[APP] online:', online);
+    if (window.debugLog) debugLog('[APP] updatePCStatus online=' + online + ' err=' + status?.error);
     state.pcOnline = online;
 
     pcStatusDot.className = 'status-dot ' + (online ? 'online' : 'offline');
     pcOnlineBadge.className = 'badge ' + (online ? 'online' : 'offline');
     pcOnlineBadge.textContent = online ? 'Online' : 'Offline';
-    console.log('[APP] Updated status dot and badge');
 
     if (online && status.system_info) {
         const info = status.system_info;
@@ -223,10 +220,10 @@ function updatePCStatus(status) {
             '<div><strong>GPU:</strong> ' + (info.gpu || 'N/A') + '</div>' +
             '<div><strong>RAM:</strong> ' + (info.ram_available_gb || '?') + 'GB free</div>' +
             '<div><strong>CPU:</strong> ' + (info.cpu_percent || '?') + '%</div>';
-        console.log('[APP] Updated PC info with system_info');
+        if (window.debugLog) debugLog('[APP] PC INFO UPDATED - ONLINE!');
     } else {
         pcInfoEl.innerHTML = '<p class="muted">PC not connected</p>';
-        console.log('[APP] No system_info, showing not connected');
+        if (window.debugLog) debugLog('[APP] PC NOT CONNECTED');
     }
 }
 

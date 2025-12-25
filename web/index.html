@@ -182,6 +182,26 @@
         </div>
     </div>
 
+    <!-- DEBUG PANEL -->
+    <div id="debugPanel" style="position:fixed; bottom:60px; left:0; right:0; max-height:200px; overflow-y:auto; background:#000; color:#0f0; font-family:monospace; font-size:11px; padding:8px; border-top:2px solid #0f0; z-index:9999;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+            <strong>DEBUG</strong>
+            <button onclick="document.getElementById('debugLog').innerHTML=''" style="background:#333; color:#fff; border:none; padding:2px 8px; font-size:10px;">Clear</button>
+        </div>
+        <div id="debugLog"></div>
+    </div>
+    <script>
+        window.debugLog = function(msg) {
+            const log = document.getElementById('debugLog');
+            if (log) {
+                const time = new Date().toLocaleTimeString();
+                log.innerHTML += `<div>[${time}] ${msg}</div>`;
+                log.scrollTop = log.scrollHeight;
+            }
+            console.log(msg);
+        };
+    </script>
+
     <script src="js/relay.js"></script>
     <script src="js/app.js"></script>
     <script>
