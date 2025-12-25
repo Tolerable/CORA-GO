@@ -74,7 +74,7 @@ def run_diagnostics(quiet: bool = False, display=None) -> Tuple[List[str], List[
         if display:
             display.update_phase(name, status, msg)
 
-    log(f"\n{C.INFO}CORA-GO Startup Diagnostics{C.END}")
+    log(f"{C.INFO}CORA-GO Startup Diagnostics{C.END}")
     log("=" * 40)
 
     # 1. TTS Check
