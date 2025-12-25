@@ -329,14 +329,25 @@ def show_pairing_window():
 
     # Poll in main thread using root.after (thread-safe)
     def poll_status():
-        status = pairing.check_pairing_status(code)
-        print(f"[POLL] Status: {status}")
-        if status.get("status") == "claimed":
-            on_paired(status)
-        elif status.get("status") == "expired":
-            on_paired({"error": "Pairing code expired"})
-        else:
-            # Keep polling every 2 seconds
+        import sys
+        try:
+            status = pairing.check_pairing_status(code)
+            print(f"[POLL] Status: {status}", flush=True)
+            sys.stdout.flush()
+
+            if status.get("status") == "claimed":
+                print("[POLL] Calling on_paired!", flush=True)
+                on_paired(status)
+            elif status.get("status") == "expired":
+                print("[POLL] Code expired!", flush=True)
+                on_paired({"error": "Pairing code expired"})
+            else:
+                # Keep polling every 2 seconds
+                root.after(2000, poll_status)
+        except Exception as e:
+            print(f"[POLL] EXCEPTION: {e}", flush=True)
+            import traceback
+            traceback.print_exc()
             root.after(2000, poll_status)
 
     # Start polling after 1 second

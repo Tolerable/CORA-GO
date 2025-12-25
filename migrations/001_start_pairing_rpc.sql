@@ -41,15 +41,19 @@ BEGIN
         RETURN jsonb_build_object('error', 'Pairing code expired');
     END IF;
 
-    -- Generate IDs
+    IF v_pairing.claimed_at IS NOT NULL THEN
+        RETURN jsonb_build_object('error', 'Code already claimed');
+    END IF;
+
+    -- Generate IDs for response only
     v_user_id := gen_random_uuid();
     v_device_id := gen_random_uuid();
     v_anchor_id := v_pairing.anchor_id;
     v_anchor_name := v_pairing.anchor_name;
 
-    -- Mark as claimed
+    -- Mark as claimed (set claimed_at only, not claimed_by due to FK)
     UPDATE cora_pairing
-    SET claimed_at = NOW(), claimed_by = v_user_id
+    SET claimed_at = NOW()
     WHERE code = p_code;
 
     RETURN jsonb_build_object(
@@ -58,7 +62,9 @@ BEGIN
         'user_id', v_user_id,
         'device_id', v_device_id,
         'anchor_id', v_anchor_id,
-        'anchor_name', v_anchor_name
+        'anchor_name', v_anchor_name,
+        'email', p_email,
+        'name', p_name
     );
 END;
 $fn$ LANGUAGE plpgsql SECURITY DEFINER;
