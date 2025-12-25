@@ -717,8 +717,34 @@
             if (result.anchor_id) localStorage.setItem('cora_anchor_id', result.anchor_id);
             if (pairingInfo && pairingInfo.anchor_id) localStorage.setItem('cora_anchor_id', pairingInfo.anchor_id);
 
+            // Claim the pairing in database so anchor knows we're done
+            await claimPairing(currentCode, name);
+
             // ALWAYS go to success - no email verification needed
             showSuccess(result.anchor_name ? result : pairingInfo || {anchor_name: 'PC Anchor'});
+        }
+
+        async function claimPairing(code, deviceName) {
+            // Update cora_pairing to mark as claimed
+            try {
+                await fetch(`${SUPABASE_URL}/rest/v1/cora_pairing?code=eq.${code}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify({
+                        status: 'claimed',
+                        device_name: deviceName,
+                        claimed_at: new Date().toISOString()
+                    })
+                });
+                console.log('Pairing claimed in database');
+            } catch (e) {
+                console.error('Failed to claim pairing:', e);
+            }
         }
 
         async function pollPairingStatus() {
