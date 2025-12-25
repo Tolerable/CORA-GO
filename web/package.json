@@ -1,0 +1,9 @@
+{
+  "name": "cora-go",
+  "version": "1.0.0",
+  "description": "CORA-GO Mobile AI Assistant",
+  "private": true,
+  "scripts": {
+    "build": "echo 'Static site - no build needed'"
+  }
+}

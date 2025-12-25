@@ -1,6 +1,7 @@
 [build]
-  publish = "web"
-  command = "echo 'Static PWA - no build needed'"
+  base = "web"
+  publish = "."
+  command = "echo 'Static PWA'"
 
 [[headers]]
   for = "/*"
