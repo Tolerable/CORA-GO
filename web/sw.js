@@ -3,7 +3,7 @@
  * Enables offline support and PWA features
  */
 
-const CACHE_NAME = 'cora-go-v3';
+const CACHE_NAME = 'cora-go-v4';
 const ASSETS = [
     '/',
     '/index.html',
@@ -39,9 +39,10 @@ self.addEventListener('fetch', (e) => {
     // Skip non-GET requests
     if (e.request.method !== 'GET') return;
 
-    // Skip API calls (Ollama, Pollinations)
+    // Skip API calls (Ollama, Pollinations, Supabase)
     if (e.request.url.includes('localhost:11434') ||
-        e.request.url.includes('pollinations.ai')) {
+        e.request.url.includes('pollinations.ai') ||
+        e.request.url.includes('supabase.co')) {
         return;
     }
 

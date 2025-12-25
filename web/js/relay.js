@@ -53,11 +53,14 @@ const Relay = {
     
     // Call RPC function
     async rpc(func, params = {}) {
+        console.log('[RELAY] rpc called:', func, params);
         if (!this.isConfigured()) {
+            console.log('[RELAY] Not configured');
             return { error: 'Relay not configured' };
         }
-        
+
         try {
+            console.log('[RELAY] Fetching:', `${this.url}/rest/v1/rpc/${func}`);
             const resp = await fetch(`${this.url}/rest/v1/rpc/${func}`, {
                 method: 'POST',
                 headers: {
@@ -67,20 +70,32 @@ const Relay = {
                 },
                 body: JSON.stringify(params)
             });
-            return await resp.json();
+            console.log('[RELAY] Response status:', resp.status);
+            const data = await resp.json();
+            console.log('[RELAY] Response data:', data);
+            return data;
         } catch (e) {
+            console.error('[RELAY] RPC error:', e);
             return { error: e.message };
         }
     },
     
     // Get PC status (filtered by anchor_id if paired)
     async getPCStatus() {
+        console.log('[RELAY] getPCStatus called');
+        console.log('[RELAY] isPaired:', this.isPaired());
+        console.log('[RELAY] anchorId:', this.anchorId);
+
         if (!this.isPaired()) {
+            console.log('[RELAY] Not paired - returning error');
             return { error: 'Not paired' };
         }
         // Reinitialize anchor ID in case it changed
         this.init();
-        return await this.rpc('get_cora_status', { p_anchor_id: this.anchorId });
+        console.log('[RELAY] Calling get_cora_status with anchor:', this.anchorId);
+        const result = await this.rpc('get_cora_status', { p_anchor_id: this.anchorId });
+        console.log('[RELAY] get_cora_status result:', result);
+        return result;
     },
     
     // Send command to PC
