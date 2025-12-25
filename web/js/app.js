@@ -47,12 +47,10 @@ function checkPairingStatus() {
     if (!state.paired) {
         if (window.debugLog) debugLog('[APP] NOT PAIRED - showing banner');
         if (banner) banner.style.display = 'block';
-        addMessage('ai', 'Welcome to CORA-GO! Tap the banner above to pair with your PC.');
         pcInfoEl.innerHTML = '<p class="muted"><a href="pair.html">Pair device to connect</a></p>';
     } else {
         if (window.debugLog) debugLog('[APP] PAIRED - starting poll');
         if (banner) banner.style.display = 'none';
-        addMessage('ai', 'CORA-GO ready. Checking PC connection...');
         startPCPolling();
     }
 }

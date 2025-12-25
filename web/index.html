@@ -182,13 +182,13 @@
         </div>
     </div>
 
-    <!-- DEBUG PANEL -->
-    <div id="debugPanel" style="position:fixed; bottom:60px; left:0; right:0; max-height:200px; overflow-y:auto; background:#000; color:#0f0; font-family:monospace; font-size:11px; padding:8px; border-top:2px solid #0f0; z-index:9999;">
+    <!-- DEBUG PANEL (hidden by default, toggle with triple-tap on logo) -->
+    <div id="debugPanel" style="display:none; position:fixed; bottom:60px; left:0; right:0; max-height:200px; overflow-y:auto; background:#000; color:#0f0; font-family:monospace; font-size:11px; padding:8px; border-top:2px solid #0f0; z-index:9999; user-select:text; -webkit-user-select:text;">
         <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
             <strong>DEBUG</strong>
-            <button onclick="document.getElementById('debugLog').innerHTML=''" style="background:#333; color:#fff; border:none; padding:2px 8px; font-size:10px;">Clear</button>
+            <button onclick="document.getElementById('debugPanel').style.display='none'" style="background:#333; color:#fff; border:none; padding:2px 8px; font-size:10px;">Hide</button>
         </div>
-        <div id="debugLog"></div>
+        <div id="debugLog" style="user-select:text; -webkit-user-select:text;"></div>
     </div>
     <script>
         window.debugLog = function(msg) {
@@ -200,6 +200,16 @@
             }
             console.log(msg);
         };
+        // Triple-tap logo to show debug panel
+        let tapCount = 0;
+        document.querySelector('.logo')?.addEventListener('click', () => {
+            tapCount++;
+            setTimeout(() => tapCount = 0, 500);
+            if (tapCount >= 3) {
+                document.getElementById('debugPanel').style.display = 'block';
+                tapCount = 0;
+            }
+        });
     </script>
 
     <script src="js/relay.js"></script>
