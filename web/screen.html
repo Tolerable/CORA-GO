@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="theme-color" content="#000000">
+    <title>CORA-GO - Screen View</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #000;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .toolbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 44px;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 12px;
+            z-index: 100;
+        }
+        .toolbar-left { display: flex; align-items: center; gap: 12px; }
+        .back-btn {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.9rem;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #666;
+        }
+        .status-dot.online { background: #0f0; }
+        .status-dot.connecting { background: #ff0; animation: pulse 1s infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .toolbar-right { display: flex; gap: 8px; }
+        .tool-btn {
+            background: #333;
+            border: none;
+            color: #fff;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+        .tool-btn:hover { background: #444; }
+        .tool-btn.active { background: #0af; color: #000; }
+
+        .screen-container {
+            position: fixed;
+            top: 44px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: auto;
+            background: #111;
+        }
+        #screenImage {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            cursor: crosshair;
+        }
+        .no-screen {
+            text-align: center;
+            color: #666;
+        }
+        .no-screen h2 { margin-bottom: 8px; }
+
+        .keyboard-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.95);
+            padding: 8px;
+            display: none;
+        }
+        .keyboard-bar.active { display: block; }
+        .keyboard-input {
+            width: 100%;
+            padding: 10px;
+            background: #222;
+            border: 1px solid #444;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1rem;
+        }
+
+        .fps-counter {
+            position: fixed;
+            bottom: 8px;
+            right: 8px;
+            background: rgba(0,0,0,0.7);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: #0f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <div class="toolbar-left">
+            <button class="back-btn" onclick="location.href='index.html'">←</button>
+            <div class="status">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">Connecting...</span>
+            </div>
+        </div>
+        <div class="toolbar-right">
+            <button class="tool-btn" id="mouseBtn" onclick="toggleMouse()">🖱️</button>
+            <button class="tool-btn" id="keyboardBtn" onclick="toggleKeyboard()">⌨️</button>
+            <button class="tool-btn" onclick="requestFullscreen()">⛶</button>
+            <button class="tool-btn" onclick="refreshScreen()">🔄</button>
+        </div>
+    </div>
+
+    <div class="screen-container" id="screenContainer">
+        <div class="no-screen" id="noScreen">
+            <h2>📺 Waiting for screen...</h2>
+            <p>Make sure PC Anchor is running</p>
+        </div>
+        <img id="screenImage" style="display:none;" alt="PC Screen">
+    </div>
+
+    <div class="keyboard-bar" id="keyboardBar">
+        <input type="text" class="keyboard-input" id="keyboardInput"
+               placeholder="Type here to send keystrokes..."
+               onkeydown="handleKeydown(event)">
+    </div>
+
+    <div class="fps-counter" id="fpsCounter">-- FPS</div>
+
+    <script src="js/relay.js"></script>
+    <script>
+        const SUPABASE_URL = 'https://bugpycickribmdfprryq.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_c9Q2joJ8g7g7ntdrzbnzbA_RJfa_5jt';
+
+        let mouseEnabled = false;
+        let keyboardEnabled = false;
+        let pollInterval = null;
+        let frameCount = 0;
+        let lastFpsUpdate = Date.now();
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!Relay.isPaired()) {
+                location.href = 'pair.html';
+                return;
+            }
+            Relay.init();
+            startScreenPolling();
+        });
+
+        async function startScreenPolling() {
+            document.getElementById('statusDot').className = 'status-dot connecting';
+            document.getElementById('statusText').textContent = 'Connecting...';
+
+            const poll = async () => {
+                try {
+                    const resp = await fetch(
+                        `${SUPABASE_URL}/rest/v1/cora_screens?id=eq.${Relay.anchorId}&select=image_data,updated_at,width,height`,
+                        {
+                            headers: {
+                                'apikey': SUPABASE_KEY,
+                                'Authorization': `Bearer ${SUPABASE_KEY}`
+                            }
+                        }
+                    );
+                    const data = await resp.json();
+
+                    if (data && data.length > 0 && data[0].image_data) {
+                        const screen = data[0];
+                        const img = document.getElementById('screenImage');
+                        const noScreen = document.getElementById('noScreen');
+
+                        img.src = 'data:image/jpeg;base64,' + screen.image_data;
+                        img.style.display = 'block';
+                        noScreen.style.display = 'none';
+
+                        document.getElementById('statusDot').className = 'status-dot online';
+                        document.getElementById('statusText').textContent = `${screen.width}x${screen.height}`;
+
+                        frameCount++;
+                        updateFps();
+                    } else {
+                        document.getElementById('statusDot').className = 'status-dot';
+                        document.getElementById('statusText').textContent = 'No screen data';
+                    }
+                } catch (e) {
+                    console.error('Screen poll error:', e);
+                    document.getElementById('statusDot').className = 'status-dot';
+                    document.getElementById('statusText').textContent = 'Error';
+                }
+            };
+
+            poll();
+            pollInterval = setInterval(poll, 1000); // Poll every second
+        }
+
+        function updateFps() {
+            const now = Date.now();
+            const elapsed = now - lastFpsUpdate;
+            if (elapsed >= 1000) {
+                const fps = Math.round(frameCount * 1000 / elapsed);
+                document.getElementById('fpsCounter').textContent = fps + ' FPS';
+                frameCount = 0;
+                lastFpsUpdate = now;
+            }
+        }
+
+        function toggleMouse() {
+            mouseEnabled = !mouseEnabled;
+            document.getElementById('mouseBtn').classList.toggle('active', mouseEnabled);
+
+            const img = document.getElementById('screenImage');
+            if (mouseEnabled) {
+                img.addEventListener('click', handleScreenClick);
+                img.style.cursor = 'crosshair';
+            } else {
+                img.removeEventListener('click', handleScreenClick);
+                img.style.cursor = 'default';
+            }
+        }
+
+        function toggleKeyboard() {
+            keyboardEnabled = !keyboardEnabled;
+            document.getElementById('keyboardBtn').classList.toggle('active', keyboardEnabled);
+            document.getElementById('keyboardBar').classList.toggle('active', keyboardEnabled);
+
+            if (keyboardEnabled) {
+                document.getElementById('keyboardInput').focus();
+            }
+        }
+
+        async function handleScreenClick(e) {
+            const img = document.getElementById('screenImage');
+            const rect = img.getBoundingClientRect();
+
+            // Calculate position relative to actual screen dimensions
+            const x = Math.round((e.clientX - rect.left) / rect.width * img.naturalWidth);
+            const y = Math.round((e.clientY - rect.top) / rect.height * img.naturalHeight);
+
+            console.log('Click at:', x, y);
+
+            // Send click command to PC
+            await Relay.runTool('mouse_click', { x, y });
+        }
+
+        async function handleKeydown(e) {
+            if (e.key === 'Enter') {
+                const input = document.getElementById('keyboardInput');
+                const text = input.value;
+                if (text) {
+                    await Relay.runTool('type_text', { text });
+                    input.value = '';
+                }
+            }
+        }
+
+        function refreshScreen() {
+            // Force immediate refresh
+            if (pollInterval) {
+                clearInterval(pollInterval);
+            }
+            startScreenPolling();
+        }
+
+        function requestFullscreen() {
+            const container = document.getElementById('screenContainer');
+            if (container.requestFullscreen) {
+                container.requestFullscreen();
+            } else if (container.webkitRequestFullscreen) {
+                container.webkitRequestFullscreen();
+            }
+        }
+    </script>
+</body>
+</html>
