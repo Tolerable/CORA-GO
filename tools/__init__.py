@@ -11,6 +11,7 @@ from .ai import query_ollama, query_pollinations, analyze_image, generate_image,
 from .sentinel import start_sentinel, stop_sentinel, sentinel_status, get_incidents
 from .bots import list_bots, launch_bot, stop_bot, running_bots, stop_all_bots
 from .voice import speak_local, list_voices, transcribe_audio, record_audio, listen_and_transcribe, get_tts_info
+from .sync import configure_sync, sync_status, sync_notes_up, sync_notes_down, register_device, heartbeat, push_system_status
 
 __all__ = [
     # Files
@@ -28,5 +29,7 @@ __all__ = [
     # Bots
     'list_bots', 'launch_bot', 'stop_bot', 'running_bots', 'stop_all_bots',
     # Voice
-    'speak_local', 'list_voices', 'transcribe_audio', 'record_audio', 'listen_and_transcribe', 'get_tts_info'
+    'speak_local', 'list_voices', 'transcribe_audio', 'record_audio', 'listen_and_transcribe', 'get_tts_info',
+    # Sync
+    'configure_sync', 'sync_status', 'sync_notes_up', 'sync_notes_down', 'register_device', 'heartbeat', 'push_system_status'
 ]
