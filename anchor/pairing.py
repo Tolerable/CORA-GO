@@ -298,40 +298,45 @@ def show_pairing_window():
         fg="#444444", bg="#0a0a0a"
     ).pack(pady=5)
 
-    # Handle pairing success
+    # Handle pairing success (called from main thread via root.after)
     def on_paired(result):
+        print(f"[PAIRING] on_paired called with: {result}")
         if "error" in result:
             status_label.config(text=result["error"], fg="#ff3333")
         else:
             device_name = result.get('device_name', result.get('anchor_name', 'Mobile'))
             status_label.config(
-                text=f"Paired with {device_name}!",
+                text=f"CONNECTED to {device_name}!",
                 fg="#00ff88"
             )
+            print(f"[PAIRING] Connected to {device_name}")
 
             # Save pairing to config
             config.set("paired", True)
             config.set("paired_device", device_name)
             config.set("anchor.id", pairing.anchor_id)
 
-            # Start the relay immediately!
-            def start_relay_and_close():
-                try:
-                    from .relay import relay
-                    relay.device_id = pairing.anchor_id
-                    if relay.is_configured():
-                        # Send first heartbeat so mobile sees us online
-                        relay.heartbeat()
-                        relay.start()
-                        print(f"[PAIRING] Relay started - mobile should see us online now!")
-                except Exception as e:
-                    print(f"[PAIRING] Failed to start relay: {e}")
+            # Close after short delay
+            def close_window():
+                print("[PAIRING] Closing window")
                 root.destroy()
 
-            root.after(1500, start_relay_and_close)
+            root.after(2000, close_window)
 
-    # Start polling
-    pairing.start_pairing_poll(code, on_paired)
+    # Poll in main thread using root.after (thread-safe)
+    def poll_status():
+        status = pairing.check_pairing_status(code)
+        print(f"[POLL] Status: {status}")
+        if status.get("status") == "claimed":
+            on_paired(status)
+        elif status.get("status") == "expired":
+            on_paired({"error": "Pairing code expired"})
+        else:
+            # Keep polling every 2 seconds
+            root.after(2000, poll_status)
+
+    # Start polling after 1 second
+    root.after(1000, poll_status)
 
     def on_close():
         pairing.stop_pairing_poll()
