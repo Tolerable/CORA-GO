@@ -88,6 +88,13 @@ function switchTab(tabId) {
     if (tabId === 'botsTab' && state.pcOnline) {
         refreshBots();
     }
+
+    // Start team chat polling when switching to Team tab
+    if (tabId === 'teamTab') {
+        startTeamChat();
+    } else {
+        stopTeamChat();
+    }
 }
 
 // ========== MESSAGES ==========
@@ -509,4 +516,54 @@ document.addEventListener('DOMContentLoaded', () => {
         statusDot.style.cursor = 'pointer';
         statusDot.addEventListener('click', retryConnection);
     }
+
+    // Team chat send button
+    const teamSendBtn = document.getElementById('teamSendBtn');
+    const teamInput = document.getElementById('teamInput');
+    if (teamSendBtn && teamInput) {
+        teamSendBtn.addEventListener('click', sendTeamMessage);
+        teamInput.addEventListener('keypress', e => {
+            if (e.key === 'Enter') sendTeamMessage();
+        });
+    }
 });
+
+// ========== TEAM CHAT ==========
+
+function startTeamChat() {
+    if (typeof TeamChat !== 'undefined') {
+        TeamChat.startPolling(messages => {
+            const container = document.getElementById('teamMessages');
+            if (container) {
+                TeamChat.renderMessages(messages, container);
+            }
+        });
+    }
+}
+
+function stopTeamChat() {
+    if (typeof TeamChat !== 'undefined') {
+        TeamChat.stopPolling();
+    }
+}
+
+async function sendTeamMessage() {
+    const input = document.getElementById('teamInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    input.value = '';
+
+    if (typeof TeamChat !== 'undefined') {
+        const result = await TeamChat.postMessage(text);
+        if (!result.success) {
+            alert('Failed to send: ' + (result.error || 'Unknown error'));
+        }
+        // Immediately refresh to show new message
+        const messages = await TeamChat.loadMessages();
+        const container = document.getElementById('teamMessages');
+        if (container) {
+            TeamChat.renderMessages(messages, container);
+        }
+    }
+}

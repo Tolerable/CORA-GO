@@ -191,13 +191,12 @@ web/
 ├── index.html      ✓ Main app (Colab view)
 ├── pair.html       ✓ Pairing
 ├── setup.html      ✓ Service config
-├── screen.html     ← NEW: TeamViewer mode
+├── screen.html     ✓ TeamViewer mode
 ├── js/
 │   ├── app.js      ✓ Main app logic
 │   ├── relay.js    ✓ Supabase communication
-│   ├── screen.js   ← NEW: Screen viewer
-│   ├── chat.js     ← NEW: Team chat
-│   └── brain.js    ← NEW: Brain interface
+│   ├── chat.js     ✓ Team chat
+│   └── brain.js    ← TODO: Brain interface
 └── css/
     └── cora-go.css ✓ Styles
 
@@ -206,26 +205,30 @@ anchor/
 ├── relay.py        ✓ Supabase relay
 ├── pairing.py      ✓ QR pairing
 ├── config.py       ✓ Config management
-├── minibot.py      ← NEW: AI assistant
-├── screen_share.py ← NEW: Screen capture for TeamViewer
+├── coramini.py     ✓ AI assistant (CORAMINI)
+├── screen_share.py ✓ Screen capture for TeamViewer
 └── tools/          ✓ 64 tools
 ```
 
 ---
 
-## PROGRESS (2025-12-25 17:40)
+## PROGRESS (2025-12-25)
 
 DONE:
 - [x] Migration 006_full_features.sql - RAN IN SUPABASE ✓
 - [x] screen.html - TeamViewer view created
 - [x] screen_share.py - PC screen capture module
+- [x] Screen tab added to index.html navigation
+- [x] screen_share started in main.py (GUI + terminal modes)
+- [x] Team chat tab added to index.html
+- [x] chat.js - Team chat module with polling
+- [x] CORAMINI (coramini.py) - AI assistant that monitors team chat
+- [x] CORAMINI started in main.py
 
 NEXT:
-- [ ] Add screen.html link to index.html
-- [ ] Start screen_share in main.py
-- [ ] Add team chat to index.html
-- [ ] Create minibot.py for AI responses
-- [ ] Test end-to-end
+- [ ] Test end-to-end on GEE's PC
+- [ ] Add Projects tab
+- [ ] Add Brain tab
 
 ---
 

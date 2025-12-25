@@ -125,6 +125,17 @@
                     </div>
                 </div>
             </section>
+
+            <!-- TEAM CHAT TAB -->
+            <section id="teamTab" class="tab-panel">
+                <div id="teamMessages"></div>
+                <div class="input-area">
+                    <div class="input-row">
+                        <input type="text" id="teamInput" placeholder="Team message..." autocomplete="off">
+                        <button id="teamSendBtn" class="icon-btn primary">▶</button>
+                    </div>
+                </div>
+            </section>
         </main>
 
         <!-- Bottom Tab Bar -->
@@ -140,6 +151,14 @@
             <button class="tab-btn" data-tab="botsTab">
                 <span class="tab-icon">🤖</span>
                 <span class="tab-label">Bots</span>
+            </button>
+            <button class="tab-btn" data-tab="teamTab">
+                <span class="tab-icon">👥</span>
+                <span class="tab-label">Team</span>
+            </button>
+            <button class="tab-btn" onclick="location.href='screen.html'">
+                <span class="tab-icon">📺</span>
+                <span class="tab-label">Screen</span>
             </button>
         </nav>
 
@@ -252,6 +271,7 @@
     </script>
 
     <script src="js/relay.js"></script>
+    <script src="js/chat.js"></script>
     <script src="js/app.js"></script>
     <script>
         if ('serviceWorker' in navigator) {

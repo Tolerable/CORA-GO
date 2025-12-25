@@ -24,6 +24,8 @@ from anchor import tools
 from anchor.tools.voice import speak, check_tts
 from anchor.tools.system import system_info
 from anchor.tools.ai import check_ollama
+from anchor.screen_share import screen_share
+from anchor.coramini import coramini
 
 
 # ANSI colors for terminal (enable on Windows)
@@ -225,6 +227,12 @@ def main_loop():
     if relay.is_configured():
         relay.start()
         print(f"{C.OK}Relay connected to Supabase{C.END}")
+        # Start screen sharing for TeamViewer mode
+        screen_share.start()
+        print(f"{C.OK}Screen sharing started{C.END}")
+        # Start CORAMINI AI assistant
+        coramini.start()
+        print(f"{C.OK}CORAMINI AI assistant started{C.END}")
     else:
         print(f"{C.WARN}Relay not configured - mobile control disabled{C.END}")
         print(f"  Run: py anchor/main.py --setup-relay")
@@ -234,6 +242,8 @@ def main_loop():
             time.sleep(1)
     except KeyboardInterrupt:
         print(f"\n{C.WARN}Shutting down...{C.END}")
+        coramini.stop()
+        screen_share.stop()
         relay.stop()
         speak("CORA-GO shutting down.", block=True)
 
@@ -292,6 +302,12 @@ def run_with_gui(args):
         if relay.is_configured():
             relay.start()
             display.log_ok("Relay connected - mobile control enabled")
+            # Start screen sharing for TeamViewer mode
+            screen_share.start()
+            display.log_ok("Screen sharing started")
+            # Start CORAMINI AI assistant
+            coramini.start()
+            display.log_ok("CORAMINI AI assistant started")
         else:
             display.log_warn("Relay not configured - run with --setup-relay")
 
