@@ -509,30 +509,59 @@
         }
 
         function processQRCode(data) {
-            // Extract code from URL or raw code
-            let code = data;
+            console.log('processQRCode called with:', data);
+            let debugEl = document.getElementById('qrDebug');
+            if (debugEl) debugEl.textContent = 'Processing: ' + data;
 
-            // If it's a URL, extract the code parameter
-            if (data.includes('?code=')) {
-                const url = new URL(data);
-                code = url.searchParams.get('code');
-            } else if (data.startsWith('CORA-')) {
-                code = data;
-            }
+            try {
+                // Extract code from URL or raw code
+                let code = null;
 
-            if (code && code.toUpperCase().startsWith('CORA-')) {
-                // Found valid code!
-                stopCamera();
-                currentCode = code.toUpperCase();
+                // If it's a URL with code parameter
+                if (data.includes('?code=') || data.includes('&code=')) {
+                    try {
+                        const url = new URL(data);
+                        code = url.searchParams.get('code');
+                        console.log('Extracted from URL:', code);
+                    } catch (e) {
+                        // URL parsing failed, try regex
+                        const match = data.match(/[?&]code=([A-Z0-9-]+)/i);
+                        if (match) code = match[1];
+                        console.log('Extracted via regex:', code);
+                    }
+                } else if (data.toUpperCase().startsWith('CORA-')) {
+                    code = data;
+                    console.log('Direct CORA code:', code);
+                }
 
-                // Show the detected code
-                document.getElementById('codeFromUrl').classList.remove('hidden');
-                document.getElementById('displayCode').textContent = currentCode;
-                document.getElementById('cameraSection').classList.add('hidden');
-                document.getElementById('scanOptions').classList.add('hidden');
+                if (debugEl) debugEl.textContent = 'Code extracted: ' + (code || 'NONE');
 
-                // Auto-validate
-                validateCode();
+                if (code && code.toUpperCase().startsWith('CORA-')) {
+                    // Found valid code!
+                    console.log('Valid code found:', code);
+                    if (debugEl) {
+                        debugEl.style.background = '#0f0';
+                        debugEl.textContent = 'SUCCESS: ' + code.toUpperCase();
+                    }
+
+                    stopCamera();
+                    currentCode = code.toUpperCase();
+
+                    // Show the detected code
+                    document.getElementById('codeFromUrl').classList.remove('hidden');
+                    document.getElementById('displayCode').textContent = currentCode;
+                    document.getElementById('cameraSection').classList.add('hidden');
+                    document.getElementById('scanOptions').classList.add('hidden');
+
+                    // Auto-validate
+                    validateCode();
+                } else {
+                    console.log('No valid CORA code in:', data);
+                    if (debugEl) debugEl.textContent = 'No CORA code found in: ' + data.substring(0, 50);
+                }
+            } catch (e) {
+                console.error('processQRCode error:', e);
+                if (debugEl) debugEl.textContent = 'ERROR: ' + e.message;
             }
         }
 
