@@ -21,7 +21,7 @@ from . import tools
 
 # EZTUNES-LIVE Supabase - anon key is safe for client-side
 SUPABASE_URL = "https://bugpycickribmdfprryq.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1Z3B5Y2lja3JpYm1kZnBycnlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2ODQ5MzgsImV4cCI6MjA3NTI2MDkzOH0.1S1ZoV4TvhIyUjKvwYE6wZexS2aM_EMNJzV9Gn8M1CI"
+SUPABASE_KEY = "sb_secret_6J4iNVJCBckqYECbbxz1OQ_248Vktk9"
 
 
 class Relay:

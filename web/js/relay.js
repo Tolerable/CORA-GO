@@ -6,7 +6,7 @@
 const Relay = {
     // EZTUNES-LIVE - anon key is public/safe (RLS handles security)
     url: 'https://bugpycickribmdfprryq.supabase.co',
-    key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1Z3B5Y2lja3JpYm1kZnBycnlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2ODQ5MzgsImV4cCI6MjA3NTI2MDkzOH0.1S1ZoV4TvhIyUjKvwYE6wZexS2aM_EMNJzV9Gn8M1CI',
+    key: 'sb_publishable_c9Q2joJ8g7g7ntdrzbnzbA_RJfa_5jt',
     pollInterval: null,
     anchorId: null,  // Set from pairing
 
