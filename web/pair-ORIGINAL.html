@@ -470,25 +470,11 @@
         }
 
         function scanWithJsQR(video) {
-            // Show debug on screen
-            let debugEl = document.getElementById('qrDebug');
-            if (!debugEl) {
-                debugEl = document.createElement('div');
-                debugEl.id = 'qrDebug';
-                debugEl.style.cssText = 'position:fixed;bottom:10px;left:10px;right:10px;background:#000;color:#0f0;padding:10px;font-family:monospace;font-size:12px;z-index:9999;border-radius:8px;';
-                document.body.appendChild(debugEl);
-            }
-            debugEl.textContent = 'jsQR starting...';
-
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
-            let scanCount = 0;
 
             scanInterval = setInterval(() => {
-                if (video.readyState !== video.HAVE_ENOUGH_DATA) {
-                    debugEl.textContent = 'Video not ready...';
-                    return;
-                }
+                if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
 
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
@@ -497,12 +483,7 @@
                 const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 const code = jsQR(imageData.data, imageData.width, imageData.height);
 
-                scanCount++;
-                debugEl.textContent = 'Scan #' + scanCount + ' | ' + canvas.width + 'x' + canvas.height + ' | ' + (code ? 'FOUND!' : 'searching...');
-
                 if (code) {
-                    debugEl.style.background = '#0a0';
-                    debugEl.textContent = 'FOUND: ' + code.data;
                     processQRCode(code.data);
                 }
             }, 200);
