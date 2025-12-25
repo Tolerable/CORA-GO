@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a1a2e">
-    <meta name="description" content="CORA-GO - AI Assistant PWA">
-
+    <meta name="description" content="CORA-GO - Mobile Control Panel">
     <title>CORA-GO</title>
-
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/svg+xml" href="assets/icons/icon.svg">
     <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
@@ -19,27 +17,138 @@
         <header id="header">
             <div class="header-left">
                 <span class="logo">CORA-GO</span>
+                <span id="pcStatus" class="status-dot offline" title="PC Status"></span>
             </div>
             <div class="header-right">
-                <button id="voiceToggle" class="icon-btn" title="Toggle Voice">🔊</button>
                 <button id="settingsBtn" class="icon-btn" title="Settings">⚙️</button>
             </div>
         </header>
 
-        <!-- Chat Container -->
-        <main id="chatContainer">
-            <div id="messages"></div>
+        <!-- Tab Content -->
+        <main id="tabContent">
+            <!-- CHAT TAB -->
+            <section id="chatTab" class="tab-panel active">
+                <div id="messages"></div>
+                <div class="input-area">
+                    <div class="input-row">
+                        <button id="micBtn" class="icon-btn">🎤</button>
+                        <input type="text" id="userInput" placeholder="Message..." autocomplete="off">
+                        <button id="sendBtn" class="icon-btn primary">▶</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PC TAB -->
+            <section id="pcTab" class="tab-panel">
+                <div class="panel-scroll">
+                    <!-- PC Status Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <span>PC Anchor</span>
+                            <span id="pcOnline" class="badge offline">Offline</span>
+                        </div>
+                        <div id="pcInfo" class="card-body">
+                            <p class="muted">Connect to see PC status</p>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="card">
+                        <div class="card-header">Quick Actions</div>
+                        <div class="card-body">
+                            <div class="tool-grid">
+                                <button class="tool-btn" onclick="runTool('system_info')">📊 System</button>
+                                <button class="tool-btn" onclick="runTool('get_clipboard')">📋 Clipboard</button>
+                                <button class="tool-btn" onclick="runTool('list_notes')">📝 Notes</button>
+                                <button class="tool-btn" onclick="runTool('check_ollama')">🤖 Ollama</button>
+                                <button class="tool-btn" onclick="runTool('get_weather')">🌤️ Weather</button>
+                                <button class="tool-btn" onclick="runTool('get_time')">🕐 Time</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tool Result -->
+                    <div id="toolResult" class="card hidden">
+                        <div class="card-header">Result</div>
+                        <pre id="toolOutput" class="card-body code"></pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- BOTS TAB -->
+            <section id="botsTab" class="tab-panel">
+                <div class="panel-scroll">
+                    <!-- Running Bots -->
+                    <div class="card">
+                        <div class="card-header">
+                            <span>Running Bots</span>
+                            <button class="icon-btn small" onclick="refreshBots()">🔄</button>
+                        </div>
+                        <div id="runningBots" class="card-body">
+                            <p class="muted">No bots running</p>
+                        </div>
+                    </div>
+
+                    <!-- Launch Bot -->
+                    <div class="card">
+                        <div class="card-header">Launch Bot</div>
+                        <div class="card-body">
+                            <div class="bot-list">
+                                <button class="bot-btn" onclick="launchBot('INTOLERANT')">
+                                    <span class="bot-icon">🤖</span>
+                                    <span class="bot-name">INTOLERANT</span>
+                                </button>
+                                <button class="bot-btn" onclick="launchBot('ASTRID')">
+                                    <span class="bot-icon">🌟</span>
+                                    <span class="bot-name">ASTRID</span>
+                                </button>
+                                <button class="bot-btn" onclick="launchBot('OLLAMA')">
+                                    <span class="bot-icon">🦙</span>
+                                    <span class="bot-name">OLLAMA</span>
+                                </button>
+                                <button class="bot-btn" onclick="launchBot('TKINTER')">
+                                    <span class="bot-icon">🖼️</span>
+                                    <span class="bot-name">TKINTER</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Send to Bot -->
+                    <div class="card">
+                        <div class="card-header">Message Bot</div>
+                        <div class="card-body">
+                            <select id="botSelect" class="full-width">
+                                <option value="">Select bot...</option>
+                                <option value="INTOLERANT">INTOLERANT</option>
+                                <option value="ASTRID">ASTRID</option>
+                                <option value="OLLAMA">OLLAMA</option>
+                            </select>
+                            <div class="input-row" style="margin-top:8px;">
+                                <input type="text" id="botMessage" placeholder="Message...">
+                                <button class="icon-btn primary" onclick="sendToBot()">▶</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </main>
 
-        <!-- Input Area -->
-        <footer id="inputArea">
-            <div class="input-row">
-                <button id="micBtn" class="icon-btn" title="Voice Input">🎤</button>
-                <input type="text" id="userInput" placeholder="Ask CORA-GO..." autocomplete="off">
-                <button id="sendBtn" class="icon-btn" title="Send">📤</button>
-            </div>
-            <div id="status" class="status-bar">Ready</div>
-        </footer>
+        <!-- Bottom Tab Bar -->
+        <nav id="tabBar">
+            <button class="tab-btn active" data-tab="chatTab">
+                <span class="tab-icon">💬</span>
+                <span class="tab-label">Chat</span>
+            </button>
+            <button class="tab-btn" data-tab="pcTab">
+                <span class="tab-icon">🖥️</span>
+                <span class="tab-label">PC</span>
+            </button>
+            <button class="tab-btn" data-tab="botsTab">
+                <span class="tab-icon">🤖</span>
+                <span class="tab-label">Bots</span>
+            </button>
+        </nav>
 
         <!-- Settings Modal -->
         <div id="settingsModal" class="modal hidden">
@@ -50,40 +159,32 @@
                 </div>
                 <div class="modal-body">
                     <div class="setting-group">
-                        <label>Persona</label>
-                        <select id="personaSelect">
-                            <option value="default">Default</option>
-                            <option value="worker">Worker</option>
-                            <option value="sentinel">Sentinel</option>
-                            <option value="cora">CORA Classic</option>
-                        </select>
+                        <label>Supabase URL</label>
+                        <input type="text" id="supabaseUrl" placeholder="https://xxx.supabase.co">
                     </div>
+                    <div class="setting-group">
+                        <label>Anon Key</label>
+                        <input type="text" id="supabaseKey" placeholder="eyJ...">
+                    </div>
+                    <div class="setting-group">
+                        <button class="full-width" onclick="testConnection()">Test Connection</button>
+                    </div>
+                    <hr>
                     <div class="setting-group">
                         <label>AI Backend</label>
                         <select id="backendSelect">
-                            <option value="auto">Auto (Ollama → Pollinations)</option>
-                            <option value="ollama">Ollama Only</option>
-                            <option value="pollinations">Pollinations Only</option>
+                            <option value="pc">Via PC (Ollama)</option>
+                            <option value="pollinations">Pollinations (Direct)</option>
                         </select>
-                    </div>
-                    <div class="setting-group">
-                        <label>Voice</label>
-                        <input type="checkbox" id="voiceEnabled" checked>
-                        <span>Enable TTS</span>
-                    </div>
-                    <div class="setting-group">
-                        <label>Wake Word</label>
-                        <input type="checkbox" id="wakeWordEnabled">
-                        <span>Listen for "Hey CORA"</span>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <script src="js/relay.js"></script>
     <script src="js/app.js"></script>
     <script>
-        // Register service worker
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js')
                 .then(reg => console.log('SW registered'))

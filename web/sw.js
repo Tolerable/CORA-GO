@@ -3,12 +3,13 @@
  * Enables offline support and PWA features
  */
 
-const CACHE_NAME = 'cora-go-v2';
+const CACHE_NAME = 'cora-go-v3';
 const ASSETS = [
     '/',
     '/index.html',
     '/css/cora-go.css',
     '/js/app.js',
+    '/js/relay.js',
     '/manifest.json'
 ];
 
