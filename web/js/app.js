@@ -326,3 +326,68 @@ function loadSettings() {
         state.backend = JSON.parse(saved).backend || 'pollinations';
     }
 }
+
+// ========== CONNECTION RETRY/REPAIR ==========
+async function retryConnection() {
+    const retryBtn = document.getElementById('retryBtn');
+    const pcError = document.getElementById('pcError');
+
+    // Show spinning state
+    if (retryBtn) retryBtn.textContent = '⏳';
+    if (pcError) pcError.style.display = 'none';
+
+    pcInfoEl.innerHTML = '<p class="muted">Retrying connection...</p>';
+
+    // Re-init relay
+    Relay.init();
+
+    // Force immediate status check
+    try {
+        const status = await Relay.getPCStatus();
+        updatePCStatus(status);
+
+        if (status && !status.error && status.online) {
+            addMessage('ai', '✅ PC connection restored!');
+        } else {
+            showConnectionError(status?.error || 'PC not responding');
+        }
+    } catch (e) {
+        showConnectionError(e.message);
+    }
+
+    if (retryBtn) retryBtn.textContent = '🔄';
+}
+
+function showConnectionError(msg) {
+    const pcError = document.getElementById('pcError');
+    const pcErrorMsg = document.getElementById('pcErrorMsg');
+
+    if (pcError && pcErrorMsg) {
+        pcErrorMsg.textContent = msg || 'Connection failed';
+        pcError.style.display = 'block';
+    }
+
+    pcInfoEl.innerHTML = '<p class="muted">PC not connected</p>';
+}
+
+function repairPairing() {
+    // Go to pairing page to re-pair
+    if (confirm('This will clear current pairing and let you re-pair. Continue?')) {
+        // Clear pairing data
+        localStorage.removeItem('cora_paired');
+        localStorage.removeItem('cora_anchor_id');
+        localStorage.removeItem('cora_user_id');
+        localStorage.removeItem('cora_device_id');
+        // Redirect to pair page
+        window.location.href = 'pair.html';
+    }
+}
+
+// Make header status dot clickable
+document.addEventListener('DOMContentLoaded', () => {
+    const statusDot = document.getElementById('pcStatus');
+    if (statusDot) {
+        statusDot.style.cursor = 'pointer';
+        statusDot.addEventListener('click', retryConnection);
+    }
+});

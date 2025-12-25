@@ -717,7 +717,12 @@ class BootDisplay:
                     # Try AI query
                     result = execute_tool('ask_ai', {'prompt': text})
                     if isinstance(result, dict) and 'response' in result:
-                        self.log_result(result['response'])
+                        response_text = result['response']
+                        self.log_result(response_text)
+                        # Speak response if not in errors-only mode
+                        from ..config import config
+                        if not config.get('voice.speak_errors_only', True):
+                            execute_tool('speak', {'text': response_text[:500]})
                     elif isinstance(result, dict) and 'error' in result:
                         self.log_warn(result['error'])
                     else:

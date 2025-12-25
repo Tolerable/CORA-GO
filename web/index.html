@@ -52,10 +52,16 @@
                     <div class="card">
                         <div class="card-header">
                             <span>PC Anchor</span>
+                            <button id="retryBtn" class="icon-btn small" onclick="retryConnection()" title="Retry connection">🔄</button>
                             <span id="pcOnline" class="badge offline">Offline</span>
                         </div>
                         <div id="pcInfo" class="card-body">
                             <p class="muted">Connect to see PC status</p>
+                        </div>
+                        <div id="pcError" class="card-body error-info" style="display:none;">
+                            <p id="pcErrorMsg" class="error-text"></p>
+                            <button class="tool-btn" onclick="retryConnection()">🔄 Retry Connection</button>
+                            <button class="tool-btn" onclick="repairPairing()">🔧 Repair Pairing</button>
                         </div>
                     </div>
 
@@ -163,6 +169,13 @@
                             <option value="pc">Via PC (Ollama)</option>
                             <option value="pollinations">Pollinations (Direct)</option>
                         </select>
+                    </div>
+
+                    <div class="setting-group" style="margin-top: 1rem;">
+                        <label>Service Configuration</label>
+                        <button onclick="location.href='setup.html'" style="padding: 10px 16px; background: linear-gradient(90deg, #ff00ff, #00ffff); color: #000; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; width: 100%;">
+                            ⚙️ Configure Services (Media, NAS, Cameras...)
+                        </button>
                     </div>
                 </div>
             </div>

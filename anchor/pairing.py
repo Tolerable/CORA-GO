@@ -255,11 +255,32 @@ def show_pairing_window():
         if "error" in result:
             status_label.config(text=result["error"], fg="#ff3333")
         else:
+            device_name = result.get('device_name', result.get('anchor_name', 'Mobile'))
             status_label.config(
-                text=f"Paired with {result.get('anchor_name', 'device')}!",
+                text=f"Paired with {device_name}!",
                 fg="#00ff88"
             )
-            root.after(2000, root.destroy)
+
+            # Save pairing to config
+            config.set("paired", True)
+            config.set("paired_device", device_name)
+            config.set("anchor.id", pairing.anchor_id)
+
+            # Start the relay immediately!
+            def start_relay_and_close():
+                try:
+                    from .relay import relay
+                    relay.device_id = pairing.anchor_id
+                    if relay.is_configured():
+                        # Send first heartbeat so mobile sees us online
+                        relay.heartbeat()
+                        relay.start()
+                        print(f"[PAIRING] Relay started - mobile should see us online now!")
+                except Exception as e:
+                    print(f"[PAIRING] Failed to start relay: {e}")
+                root.destroy()
+
+            root.after(1500, start_relay_and_close)
 
     # Start polling
     pairing.start_pairing_poll(code, on_paired)

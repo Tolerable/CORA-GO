@@ -484,3 +484,28 @@ hr {
 #chatTab .input-area {
     flex-shrink: 0;
 }
+
+/* ========== CONNECTION ERROR ========== */
+.error-info {
+    background: rgba(248, 113, 113, 0.1);
+    border-top: 1px solid var(--error);
+    padding: 12px;
+}
+
+.error-text {
+    color: var(--error);
+    font-size: 0.85rem;
+    margin-bottom: 10px;
+}
+
+.error-info .tool-btn {
+    margin: 4px;
+}
+
+/* Header status dot clickable */
+#pcStatus {
+    transition: transform 0.2s;
+}
+#pcStatus:hover {
+    transform: scale(1.3);
+}

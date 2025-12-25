@@ -7,28 +7,34 @@ echo   CORA-GO - Mobile AI Assistant
 echo   Unity Lab AI + AI-Ministries + TheREV
 echo ========================================
 echo.
-
-echo [1] Interactive Mode
-echo [2] Worker Mode
-echo [3] Sentinel Mode
-echo [4] System Status
-echo [5] Launch Web (start local server)
-echo [6] List Bots
-echo [7] Exit
+echo   INTERFACES:
+echo   [1] LOCAL GUI   - Tkinter app (full window, waveform, stats)
+echo   [2] LOCAL WEB   - Browser interface (mobile-style tabs)
+echo   [3] LOCAL CLI   - Text mode in terminal
+echo.
+echo   TOOLS:
+echo   [4] System Status
+echo   [5] List Bots
+echo   [6] Sentinel Mode (audio monitoring)
+echo.
+echo   [0] Exit
 echo.
 
 set /p choice="Select option: "
 
-if "%choice%"=="1" py -3.12 cora_go.py
-if "%choice%"=="2" py -3.12 cora_go.py -p worker
-if "%choice%"=="3" py -3.12 cora_go.py --sentinel
-if "%choice%"=="4" py -3.12 cora_go.py --status
-if "%choice%"=="5" (
+if "%choice%"=="1" py -3.12 anchor\main.py
+if "%choice%"=="2" (
     echo Starting web server on http://localhost:8080
-    cd web
+    echo Opening browser...
+    start "" http://localhost:8080
+    pushd web
     py -3.12 -m http.server 8080
+    popd
 )
-if "%choice%"=="6" py -3.12 cora_go.py --bots
-if "%choice%"=="7" exit
+if "%choice%"=="3" py -3.12 cora_go.py
+if "%choice%"=="4" py -3.12 cora_go.py --status
+if "%choice%"=="5" py -3.12 cora_go.py --bots
+if "%choice%"=="6" py -3.12 cora_go.py --sentinel
+if "%choice%"=="0" exit
 
 pause

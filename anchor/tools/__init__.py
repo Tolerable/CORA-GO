@@ -62,9 +62,16 @@ def execute_tool(name: str, args: Dict[str, Any]) -> Any:
 
 
 # Import tool modules to register them
-from . import voice
-from . import system
-from . import files
-from . import ai
-from . import notes
-from . import web
+from . import voice       # TTS
+from . import system      # System info, clipboard, processes
+from . import files       # File operations
+from . import ai          # Ollama, Pollinations, image generation
+from . import notes       # Note taking
+from . import web         # Web fetch, search
+from . import memory      # Working memory
+from . import screenshots # Desktop, window, web screenshots
+from . import media       # Emby/Jellyfin media control
+from . import nas         # NAS file access
+from . import hearing     # Speech recognition
+from . import vision      # Camera capture and analysis
+from . import bots        # Bot management

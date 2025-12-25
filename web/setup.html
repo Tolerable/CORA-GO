@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a1a2e">
+    <title>CORA-GO Setup</title>
+    <link rel="stylesheet" href="css/cora-go.css">
+    <style>
+        .setup-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .setup-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 0;
+            border-bottom: 1px solid #333;
+            margin-bottom: 20px;
+        }
+        .back-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 8px;
+        }
+        .service-card {
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .service-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .service-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+        .service-toggle {
+            position: relative;
+            width: 50px;
+            height: 26px;
+        }
+        .service-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #444;
+            transition: 0.3s;
+            border-radius: 26px;
+        }
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+        input:checked + .toggle-slider {
+            background: linear-gradient(90deg, #ff00ff, #00ffff);
+        }
+        input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+        .service-body {
+            display: none;
+        }
+        .service-body.active {
+            display: block;
+        }
+        .form-group {
+            margin-bottom: 12px;
+        }
+        .form-group label {
+            display: block;
+            color: #888;
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            background: #252525;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1rem;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #ff00ff;
+        }
+        .test-btn {
+            padding: 8px 16px;
+            background: #333;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+        .test-btn:hover {
+            background: #444;
+        }
+        .test-result {
+            margin-top: 8px;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+        .test-result.success {
+            background: rgba(0, 255, 100, 0.1);
+            color: #00ff64;
+        }
+        .test-result.error {
+            background: rgba(255, 0, 100, 0.1);
+            color: #ff0064;
+        }
+        .save-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 16px 20px;
+            background: #1a1a1a;
+            border-top: 1px solid #333;
+            display: flex;
+            gap: 12px;
+        }
+        .save-btn {
+            flex: 1;
+            padding: 12px;
+            background: linear-gradient(90deg, #ff00ff, #00ffff);
+            color: #000;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .save-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .info-text {
+            color: #666;
+            font-size: 0.85rem;
+            margin-top: 8px;
+        }
+        .share-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .share-chip {
+            padding: 6px 12px;
+            background: #333;
+            border-radius: 16px;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .share-chip .remove {
+            cursor: pointer;
+            opacity: 0.6;
+        }
+        .share-chip .remove:hover {
+            opacity: 1;
+        }
+        .camera-list {
+            margin-top: 8px;
+        }
+        .camera-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            background: #252525;
+            border-radius: 6px;
+            margin-bottom: 6px;
+        }
+        .camera-item input {
+            flex: 1;
+            padding: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="setup-container">
+        <div class="setup-header">
+            <button class="back-btn" onclick="location.href='index.html'">←</button>
+            <h1 style="margin:0;">Service Setup</h1>
+        </div>
+
+        <!-- Media Server -->
+        <div class="service-card" id="mediaCard">
+            <div class="service-header">
+                <span class="service-title">🎵 Media Server</span>
+                <label class="service-toggle">
+                    <input type="checkbox" id="mediaEnabled" onchange="toggleService('media')">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            <div class="service-body" id="mediaBody">
+                <div class="form-group">
+                    <label>Server Type</label>
+                    <select id="mediaType">
+                        <option value="emby">Emby</option>
+                        <option value="jellyfin">Jellyfin</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Server URL</label>
+                    <input type="url" id="mediaUrl" placeholder="http://192.168.1.100:8096">
+                </div>
+                <div class="form-group">
+                    <label>API Key</label>
+                    <input type="password" id="mediaApiKey" placeholder="Your API key">
+                </div>
+                <div class="form-group">
+                    <label>User ID</label>
+                    <input type="text" id="mediaUserId" placeholder="User ID for playback">
+                </div>
+                <button class="test-btn" onclick="testMedia()">Test Connection</button>
+                <div id="mediaTestResult" class="test-result" style="display:none;"></div>
+                <p class="info-text">Get API key from Emby Dashboard → API Keys</p>
+            </div>
+        </div>
+
+        <!-- NAS -->
+        <div class="service-card" id="nasCard">
+            <div class="service-header">
+                <span class="service-title">💾 NAS Storage</span>
+                <label class="service-toggle">
+                    <input type="checkbox" id="nasEnabled" onchange="toggleService('nas')">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            <div class="service-body" id="nasBody">
+                <div class="form-group">
+                    <label>Server Name/IP</label>
+                    <input type="text" id="nasServer" placeholder="Server1 or 192.168.1.50">
+                </div>
+                <div class="form-group">
+                    <label>Shares</label>
+                    <div style="display:flex; gap:8px;">
+                        <input type="text" id="newShare" placeholder="Share name">
+                        <button class="test-btn" onclick="addShare()">Add</button>
+                    </div>
+                    <div id="shareList" class="share-list"></div>
+                </div>
+                <div class="form-group">
+                    <label>Default Share</label>
+                    <select id="nasDefaultShare"></select>
+                </div>
+                <button class="test-btn" onclick="testNas()">Test Connection</button>
+                <div id="nasTestResult" class="test-result" style="display:none;"></div>
+            </div>
+        </div>
+
+        <!-- Vision/Cameras -->
+        <div class="service-card" id="visionCard">
+            <div class="service-header">
+                <span class="service-title">📷 Cameras</span>
+                <label class="service-toggle">
+                    <input type="checkbox" id="visionEnabled" onchange="toggleService('vision')">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            <div class="service-body" id="visionBody">
+                <button class="test-btn" onclick="detectCameras()">Detect Cameras</button>
+                <div id="cameraList" class="camera-list">
+                    <p class="info-text">Click detect to find cameras</p>
+                </div>
+                <div class="form-group" style="margin-top:12px;">
+                    <label>Default Camera</label>
+                    <select id="visionDefaultCamera">
+                        <option value="0">Camera 0</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hearing/STT -->
+        <div class="service-card" id="hearingCard">
+            <div class="service-header">
+                <span class="service-title">🎙️ Speech Recognition</span>
+                <label class="service-toggle">
+                    <input type="checkbox" id="hearingEnabled" onchange="toggleService('hearing')">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            <div class="service-body" id="hearingBody">
+                <button class="test-btn" onclick="listMics()">Detect Microphones</button>
+                <div class="form-group" style="margin-top:12px;">
+                    <label>Microphone</label>
+                    <select id="hearingMic">
+                        <option value="">Default</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Wake Word</label>
+                    <input type="text" id="hearingWakeWord" placeholder="cora">
+                </div>
+                <div class="form-group">
+                    <label>Listen Timeout (seconds)</label>
+                    <input type="number" id="hearingTimeout" value="10" min="5" max="60">
+                </div>
+            </div>
+        </div>
+
+        <!-- Voice/TTS -->
+        <div class="service-card" id="voiceCard">
+            <div class="service-header">
+                <span class="service-title">🔊 Voice (TTS)</span>
+                <label class="service-toggle">
+                    <input type="checkbox" id="voiceEnabled" checked onchange="toggleService('voice')">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            <div class="service-body active" id="voiceBody">
+                <div class="form-group">
+                    <label>Engine</label>
+                    <select id="voiceEngine">
+                        <option value="kokoro">Kokoro (Neural)</option>
+                        <option value="pyttsx3">pyttsx3</option>
+                        <option value="powershell">PowerShell</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Voice ID (for Kokoro)</label>
+                    <input type="text" id="voiceId" placeholder="af_bella">
+                </div>
+                <div class="form-group">
+                    <label>Speech Rate</label>
+                    <input type="number" id="voiceRate" value="1.0" min="0.5" max="2.0" step="0.1">
+                </div>
+                <button class="test-btn" onclick="testVoice()">Test Voice</button>
+            </div>
+        </div>
+
+        <!-- AI -->
+        <div class="service-card" id="aiCard">
+            <div class="service-header">
+                <span class="service-title">🤖 AI Settings</span>
+                <span style="color:#00ff64;">Always On</span>
+            </div>
+            <div class="service-body active" id="aiBody">
+                <div class="form-group">
+                    <label>Ollama URL</label>
+                    <input type="url" id="aiOllamaUrl" placeholder="http://localhost:11434">
+                </div>
+                <div class="form-group">
+                    <label>Default Model</label>
+                    <input type="text" id="aiModel" placeholder="llama3.2:3b">
+                </div>
+                <div class="form-group">
+                    <label>Vision Model</label>
+                    <input type="text" id="aiVisionModel" placeholder="llava:7b">
+                </div>
+                <button class="test-btn" onclick="testOllama()">Test Ollama</button>
+                <div id="ollamaTestResult" class="test-result" style="display:none;"></div>
+            </div>
+        </div>
+
+        <!-- Bots -->
+        <div class="service-card" id="botsCard">
+            <div class="service-header">
+                <span class="service-title">🤖 Bot Management</span>
+                <label class="service-toggle">
+                    <input type="checkbox" id="botsEnabled" checked onchange="toggleService('bots')">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            <div class="service-body active" id="botsBody">
+                <div class="form-group">
+                    <label>Bot Search Paths</label>
+                    <div style="display:flex; gap:8px;">
+                        <input type="text" id="newBotPath" placeholder="C:/claude or /home/user/bots">
+                        <button class="test-btn" onclick="addBotPath()">Add</button>
+                    </div>
+                    <div id="botPathList" class="share-list"></div>
+                </div>
+                <button class="test-btn" onclick="scanBots()">Scan for Bots</button>
+                <div id="botList" style="margin-top:12px;">
+                    <p class="info-text">Click scan to find bots</p>
+                </div>
+                <div class="form-group" style="margin-top:12px;">
+                    <label>Auto-start Bots (comma separated)</label>
+                    <input type="text" id="botsAutoStart" placeholder="BLACK, OLLAMABOT">
+                </div>
+                <p class="info-text">Bots are folders with main.py, start.bat, or CLAUDE.md</p>
+            </div>
+        </div>
+
+        <div style="height: 80px;"></div>
+    </div>
+
+    <div class="save-bar">
+        <button class="save-btn" onclick="saveConfig()">Save Configuration</button>
+    </div>
+
+    <script src="js/relay.js"></script>
+    <script>
+        let config = {};
+        let shares = [];
+        let cameras = [];
+        let botPaths = ['C:/claude'];
+
+        // Load current config on page load
+        document.addEventListener('DOMContentLoaded', loadConfig);
+
+        async function loadConfig() {
+            try {
+                // Try to get config from PC via relay
+                const result = await sendCommand('get_config', {});
+                if (result && !result.error) {
+                    config = result;
+                    populateForm();
+                }
+            } catch (e) {
+                console.log('Could not load config:', e);
+            }
+        }
+
+        function populateForm() {
+            // Media
+            if (config.media) {
+                document.getElementById('mediaEnabled').checked = config.media.enabled;
+                document.getElementById('mediaType').value = config.media.type || 'emby';
+                document.getElementById('mediaUrl').value = config.media.url || '';
+                document.getElementById('mediaApiKey').value = config.media.api_key || '';
+                document.getElementById('mediaUserId').value = config.media.user_id || '';
+                toggleService('media');
+            }
+
+            // NAS
+            if (config.nas) {
+                document.getElementById('nasEnabled').checked = config.nas.enabled;
+                document.getElementById('nasServer').value = config.nas.server || '';
+                shares = config.nas.shares || [];
+                updateShareList();
+                toggleService('nas');
+            }
+
+            // Vision
+            if (config.vision) {
+                document.getElementById('visionEnabled').checked = config.vision.enabled;
+                cameras = config.vision.cameras || [];
+                updateCameraList();
+                toggleService('vision');
+            }
+
+            // Hearing
+            if (config.hearing) {
+                document.getElementById('hearingEnabled').checked = config.hearing.enabled;
+                document.getElementById('hearingWakeWord').value = config.hearing.wake_word || 'cora';
+                document.getElementById('hearingTimeout').value = config.hearing.timeout || 10;
+                toggleService('hearing');
+            }
+
+            // Voice
+            if (config.voice) {
+                document.getElementById('voiceEnabled').checked = config.voice.enabled !== false;
+                document.getElementById('voiceEngine').value = config.voice.engine || 'kokoro';
+                document.getElementById('voiceId').value = config.voice.voice_id || 'af_bella';
+                document.getElementById('voiceRate').value = config.voice.rate || 1.0;
+                toggleService('voice');
+            }
+
+            // AI
+            if (config.ai) {
+                document.getElementById('aiOllamaUrl').value = config.ai.ollama_url || 'http://localhost:11434';
+                document.getElementById('aiModel').value = config.ai.ollama_model || 'llama3.2:3b';
+                document.getElementById('aiVisionModel').value = config.ai.ollama_vision || 'llava:7b';
+            }
+
+            // Bots
+            if (config.bots) {
+                document.getElementById('botsEnabled').checked = config.bots.enabled !== false;
+                botPaths = config.bots.search_paths || ['C:/claude'];
+                updateBotPathList();
+                document.getElementById('botsAutoStart').value = (config.bots.auto_start || []).join(', ');
+                toggleService('bots');
+            }
+        }
+
+        function toggleService(service) {
+            const enabled = document.getElementById(service + 'Enabled').checked;
+            const body = document.getElementById(service + 'Body');
+            if (enabled) {
+                body.classList.add('active');
+            } else {
+                body.classList.remove('active');
+            }
+        }
+
+        function addShare() {
+            const input = document.getElementById('newShare');
+            const share = input.value.trim();
+            if (share && !shares.includes(share)) {
+                shares.push(share);
+                updateShareList();
+                input.value = '';
+            }
+        }
+
+        function removeShare(share) {
+            shares = shares.filter(s => s !== share);
+            updateShareList();
+        }
+
+        function updateShareList() {
+            const list = document.getElementById('shareList');
+            const select = document.getElementById('nasDefaultShare');
+
+            list.innerHTML = shares.map(s =>
+                `<div class="share-chip">${s} <span class="remove" onclick="removeShare('${s}')">×</span></div>`
+            ).join('');
+
+            select.innerHTML = shares.map(s =>
+                `<option value="${s}">${s}</option>`
+            ).join('');
+        }
+
+        function updateCameraList() {
+            const list = document.getElementById('cameraList');
+            const select = document.getElementById('visionDefaultCamera');
+
+            if (cameras.length === 0) {
+                list.innerHTML = '<p class="info-text">No cameras detected</p>';
+            } else {
+                list.innerHTML = cameras.map((c, i) =>
+                    `<div class="camera-item">
+                        <span>#${c.index}</span>
+                        <input type="text" value="${c.name || 'Camera ' + c.index}"
+                               onchange="cameras[${i}].name = this.value">
+                        <span style="color:#666;">${c.resolution || ''}</span>
+                    </div>`
+                ).join('');
+            }
+
+            select.innerHTML = cameras.map(c =>
+                `<option value="${c.index}">Camera ${c.index} - ${c.name || ''}</option>`
+            ).join('') || '<option value="0">Camera 0</option>';
+        }
+
+        async function detectCameras() {
+            try {
+                const result = await sendCommand('detect_cameras', {});
+                if (result && result.cameras) {
+                    cameras = result.cameras;
+                    updateCameraList();
+                }
+            } catch (e) {
+                alert('Could not detect cameras: ' + e);
+            }
+        }
+
+        async function listMics() {
+            try {
+                const result = await sendCommand('list_microphones', {});
+                if (result && result.microphones) {
+                    const select = document.getElementById('hearingMic');
+                    select.innerHTML = '<option value="">Default</option>' +
+                        result.microphones.map(m =>
+                            `<option value="${m.index}">${m.index}: ${m.name}</option>`
+                        ).join('');
+                }
+            } catch (e) {
+                alert('Could not list microphones: ' + e);
+            }
+        }
+
+        async function testMedia() {
+            const result = document.getElementById('mediaTestResult');
+            result.style.display = 'block';
+            result.className = 'test-result';
+            result.textContent = 'Testing...';
+
+            try {
+                const test = await sendCommand('check_media', {});
+                if (test && test.connected) {
+                    result.className = 'test-result success';
+                    result.textContent = `✓ Connected to ${test.server_name} (${test.version})`;
+                } else {
+                    result.className = 'test-result error';
+                    result.textContent = '✗ ' + (test?.error || 'Connection failed');
+                }
+            } catch (e) {
+                result.className = 'test-result error';
+                result.textContent = '✗ ' + e;
+            }
+        }
+
+        async function testNas() {
+            const result = document.getElementById('nasTestResult');
+            result.style.display = 'block';
+            result.className = 'test-result';
+            result.textContent = 'Testing...';
+
+            try {
+                const test = await sendCommand('check_nas', {});
+                if (test && test.reachable) {
+                    result.className = 'test-result success';
+                    result.textContent = `✓ NAS reachable: ${test.server}`;
+                } else {
+                    result.className = 'test-result error';
+                    result.textContent = '✗ ' + (test?.error || 'NAS not reachable');
+                }
+            } catch (e) {
+                result.className = 'test-result error';
+                result.textContent = '✗ ' + e;
+            }
+        }
+
+        async function testOllama() {
+            const result = document.getElementById('ollamaTestResult');
+            result.style.display = 'block';
+            result.className = 'test-result';
+            result.textContent = 'Testing...';
+
+            try {
+                const test = await sendCommand('check_ollama', {});
+                if (test && test.available) {
+                    result.className = 'test-result success';
+                    result.textContent = `✓ Ollama running: ${test.models?.slice(0,3).join(', ')}`;
+                } else {
+                    result.className = 'test-result error';
+                    result.textContent = '✗ ' + (test?.error || 'Ollama not running');
+                }
+            } catch (e) {
+                result.className = 'test-result error';
+                result.textContent = '✗ ' + e;
+            }
+        }
+
+        async function testVoice() {
+            try {
+                await sendCommand('speak', { text: 'CORA-GO voice test successful.', block: true });
+            } catch (e) {
+                alert('Voice test failed: ' + e);
+            }
+        }
+
+        // Bot management functions
+        function addBotPath() {
+            const input = document.getElementById('newBotPath');
+            const path = input.value.trim();
+            if (path && !botPaths.includes(path)) {
+                botPaths.push(path);
+                updateBotPathList();
+                input.value = '';
+            }
+        }
+
+        function removeBotPath(path) {
+            botPaths = botPaths.filter(p => p !== path);
+            updateBotPathList();
+        }
+
+        function updateBotPathList() {
+            const list = document.getElementById('botPathList');
+            list.innerHTML = botPaths.map(p =>
+                `<div class="share-chip">${p} <span class="remove" onclick="removeBotPath('${p}')">×</span></div>`
+            ).join('');
+        }
+
+        async function scanBots() {
+            const list = document.getElementById('botList');
+            list.innerHTML = '<p class="info-text">Scanning...</p>';
+
+            try {
+                const result = await sendCommand('list_bots', {});
+                if (result && result.bots) {
+                    if (result.bots.length === 0) {
+                        list.innerHTML = '<p class="info-text">No bots found in search paths</p>';
+                    } else {
+                        list.innerHTML = result.bots.map(bot =>
+                            `<div class="camera-item">
+                                <span style="color:${bot.running ? '#00ff64' : '#888'};">${bot.running ? '●' : '○'}</span>
+                                <span style="flex:1;"><strong>${bot.name}</strong> (${bot.type})</span>
+                                ${bot.running
+                                    ? `<button class="test-btn" onclick="stopBot('${bot.name}')" style="background:#ff0064;">Stop</button>`
+                                    : `<button class="test-btn" onclick="launchBot('${bot.name}')">Launch</button>`
+                                }
+                            </div>`
+                        ).join('');
+                    }
+                } else {
+                    list.innerHTML = '<p class="info-text">Error: ' + (result?.error || 'Unknown') + '</p>';
+                }
+            } catch (e) {
+                list.innerHTML = '<p class="info-text">Error: ' + e + '</p>';
+            }
+        }
+
+        async function launchBot(name) {
+            try {
+                const result = await sendCommand('launch_bot', { name: name });
+                if (result && result.success) {
+                    scanBots();  // Refresh list
+                } else {
+                    alert('Launch failed: ' + (result?.error || 'Unknown'));
+                }
+            } catch (e) {
+                alert('Launch failed: ' + e);
+            }
+        }
+
+        async function stopBot(name) {
+            try {
+                const result = await sendCommand('stop_bot', { name: name });
+                if (result && result.success) {
+                    scanBots();  // Refresh list
+                } else {
+                    alert('Stop failed: ' + (result?.error || 'Unknown'));
+                }
+            } catch (e) {
+                alert('Stop failed: ' + e);
+            }
+        }
+
+        function gatherConfig() {
+            return {
+                media: {
+                    enabled: document.getElementById('mediaEnabled').checked,
+                    type: document.getElementById('mediaType').value,
+                    url: document.getElementById('mediaUrl').value,
+                    api_key: document.getElementById('mediaApiKey').value,
+                    user_id: document.getElementById('mediaUserId').value,
+                    device_id: 'cora-go'
+                },
+                nas: {
+                    enabled: document.getElementById('nasEnabled').checked,
+                    server: document.getElementById('nasServer').value,
+                    shares: shares,
+                    default_share: document.getElementById('nasDefaultShare').value || shares[0] || 'TEMP'
+                },
+                vision: {
+                    enabled: document.getElementById('visionEnabled').checked,
+                    cameras: cameras,
+                    default_camera: parseInt(document.getElementById('visionDefaultCamera').value) || 0,
+                    snapshot_dir: 'snapshots'
+                },
+                hearing: {
+                    enabled: document.getElementById('hearingEnabled').checked,
+                    mic_index: document.getElementById('hearingMic').value || null,
+                    wake_word: document.getElementById('hearingWakeWord').value || 'cora',
+                    timeout: parseInt(document.getElementById('hearingTimeout').value) || 10,
+                    phrase_limit: 15
+                },
+                voice: {
+                    enabled: document.getElementById('voiceEnabled').checked,
+                    engine: document.getElementById('voiceEngine').value,
+                    voice_id: document.getElementById('voiceId').value,
+                    rate: parseFloat(document.getElementById('voiceRate').value) || 1.0,
+                    speak_errors_only: false
+                },
+                ai: {
+                    ollama_url: document.getElementById('aiOllamaUrl').value,
+                    ollama_model: document.getElementById('aiModel').value,
+                    ollama_vision: document.getElementById('aiVisionModel').value,
+                    ollama_code: 'codellama:7b',
+                    pollinations_model: 'openai',
+                    default_backend: 'auto'
+                },
+                bots: {
+                    enabled: document.getElementById('botsEnabled').checked,
+                    search_paths: botPaths,
+                    auto_start: document.getElementById('botsAutoStart').value
+                        .split(',')
+                        .map(s => s.trim())
+                        .filter(s => s)
+                }
+            };
+        }
+
+        async function saveConfig() {
+            const newConfig = gatherConfig();
+            try {
+                const result = await sendCommand('save_config', { config: newConfig });
+                if (result && result.success) {
+                    alert('Configuration saved!');
+                } else {
+                    alert('Save failed: ' + (result?.error || 'Unknown error'));
+                }
+            } catch (e) {
+                alert('Save failed: ' + e);
+            }
+        }
+
+        // Helper to send commands to PC
+        async function sendCommand(command, params) {
+            // This would go through the relay to the PC
+            // For now, just log it
+            console.log('Command:', command, params);
+
+            // Try to use the relay if configured
+            if (typeof relay !== 'undefined' && relay.sendCommand) {
+                return await relay.sendCommand(command, params);
+            }
+
+            return { error: 'PC not connected' };
+        }
+    </script>
+</body>
+</html>

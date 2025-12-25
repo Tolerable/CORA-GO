@@ -192,3 +192,62 @@ register_tool(
     },
     func=list_processes,
 )
+
+
+# Config management
+def get_config() -> dict:
+    """Get current CORA-GO configuration."""
+    from ..config import config
+    return config._data.copy()
+
+
+def save_config(config_update: dict) -> dict:
+    """
+    Update CORA-GO configuration.
+
+    Args:
+        config_update: Dict of config sections to update
+
+    Returns:
+        Success status
+    """
+    from ..config import config
+    import json
+    from pathlib import Path
+
+    try:
+        # Merge updates into current config
+        for section, values in config_update.items():
+            if section in config._data and isinstance(values, dict):
+                config._data[section].update(values)
+            else:
+                config._data[section] = values
+
+        # Save to file
+        config_file = Path(__file__).parent.parent / "config.json"
+        config_file.write_text(json.dumps(config._data, indent=2))
+
+        return {"success": True, "message": "Configuration saved"}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+register_tool(
+    name="get_config",
+    description="Get current CORA-GO configuration",
+    parameters={"type": "object", "properties": {}, "required": []},
+    func=get_config,
+)
+
+register_tool(
+    name="save_config",
+    description="Update CORA-GO configuration",
+    parameters={
+        "type": "object",
+        "properties": {
+            "config": {"type": "object", "description": "Config sections to update"},
+        },
+        "required": ["config"],
+    },
+    func=lambda config: save_config(config),
+)
