@@ -100,8 +100,7 @@ class Relay:
             "id": self.device_id,
             "online": True,
             "last_seen": datetime.utcnow().isoformat() + "Z",
-            "system_info": system_info(),
-            "active_tools": tools.list_tools(),
+            "system_info": {**system_info(), "active_tools": tools.list_tools()},
         }
         
         # Upsert status
