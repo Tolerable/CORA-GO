@@ -3,7 +3,7 @@
  * Enables offline support and PWA features
  */
 
-const CACHE_NAME = 'cora-go-v1';
+const CACHE_NAME = 'cora-go-v2';
 const ASSETS = [
     '/',
     '/index.html',
