@@ -8,7 +8,10 @@ const state = {
     messages: [],
     currentTab: 'chatTab',
     pcOnline: false,
-    backend: 'pollinations'
+    backend: 'pollinations',
+    paired: false,
+    anchorId: null,
+    userId: null
 };
 
 // ========== DOM ELEMENTS ==========
@@ -26,15 +29,28 @@ const toolOutputEl = document.getElementById('toolOutput');
 
 // ========== INITIALIZATION ==========
 document.addEventListener('DOMContentLoaded', () => {
+    // Check pairing status first
+    checkPairingStatus();
     loadSettings();
     setupEventListeners();
     setupTabs();
-    addMessage('ai', 'CORA-GO ready. Tap PC tab to connect to your desktop.');
+});
 
-    if (Relay.isConfigured()) {
+function checkPairingStatus() {
+    state.paired = localStorage.getItem('cora_paired') === 'true';
+    state.anchorId = localStorage.getItem('cora_anchor_id');
+    state.userId = localStorage.getItem('cora_user_id');
+
+    if (!state.paired) {
+        // Not paired - show pairing prompt
+        addMessage('ai', 'Welcome to CORA-GO! To connect to your PC, please pair your device first.');
+        addMessage('ai', '<a href="pair.html" style="color:#00ffff;">Tap here to pair your device</a>');
+        pcInfoEl.innerHTML = '<p class="muted"><a href="pair.html">Pair device to connect</a></p>';
+    } else {
+        addMessage('ai', 'CORA-GO ready. Checking PC connection...');
         startPCPolling();
     }
-});
+}
 
 function setupEventListeners() {
     sendBtn.addEventListener('click', sendMessage);
@@ -67,12 +83,14 @@ function switchTab(tabId) {
 }
 
 // ========== MESSAGES ==========
-function addMessage(role, text) {
+function addMessage(role, text, isHtml = false) {
     state.messages.push({ role, text, time: new Date() });
     const div = document.createElement('div');
     div.className = 'message ' + role;
+    // Allow HTML for special messages (links, etc)
+    const textContent = text.startsWith('<') ? text : escapeHtml(text);
     div.innerHTML = '<div class="sender">' + (role === 'user' ? 'You' : 'CORA-GO') + '</div>' +
-                    '<div class="text">' + escapeHtml(text) + '</div>';
+                    '<div class="text">' + textContent + '</div>';
     messagesEl.appendChild(div);
     messagesEl.scrollTop = messagesEl.scrollHeight;
 }
@@ -245,38 +263,54 @@ function sendToBot() {
 // ========== SETTINGS ==========
 function openSettings() {
     settingsModal.classList.remove('hidden');
-    document.getElementById('supabaseUrl').value = Relay.url;
-    document.getElementById('supabaseKey').value = Relay.key;
     document.getElementById('backendSelect').value = state.backend;
+
+    // Update pairing status display
+    const statusText = document.getElementById('pairingStatusText');
+    const pairBtn = document.getElementById('pairBtn');
+    const unpairBtn = document.getElementById('unpairBtn');
+
+    if (state.paired) {
+        const anchorId = localStorage.getItem('cora_anchor_id') || 'Unknown';
+        const userName = localStorage.getItem('cora_name') || '';
+        statusText.innerHTML = `<span style="color: var(--ok);">Paired</span><br>` +
+            `<small style="color: #888;">Anchor: ${anchorId}</small>` +
+            (userName ? `<br><small style="color: #888;">User: ${userName}</small>` : '');
+        pairBtn.style.display = 'none';
+        unpairBtn.style.display = 'inline-block';
+    } else {
+        statusText.innerHTML = '<span style="color: #888;">Not paired</span>';
+        pairBtn.style.display = 'inline-block';
+        unpairBtn.style.display = 'none';
+    }
 }
 
 function closeSettings() {
-    const url = document.getElementById('supabaseUrl').value.trim();
-    const key = document.getElementById('supabaseKey').value.trim();
-
-    if (url && key) {
-        Relay.configure(url, key);
-        startPCPolling();
-    }
-
     state.backend = document.getElementById('backendSelect').value;
     saveSettings();
     settingsModal.classList.add('hidden');
 }
 
-async function testConnection() {
-    const url = document.getElementById('supabaseUrl').value.trim();
-    const key = document.getElementById('supabaseKey').value.trim();
-
-    if (!url || !key) {
-        alert('Enter URL and key first');
+function unpairDevice() {
+    if (!confirm('Unpair this device? You will need to scan the QR code again to reconnect.')) {
         return;
     }
 
-    Relay.configure(url, key);
-    const ok = await Relay.testConnection();
-    alert(ok ? 'Connected!' : 'Failed');
-    if (ok) startPCPolling();
+    // Clear all pairing data
+    localStorage.removeItem('cora_paired');
+    localStorage.removeItem('cora_anchor_id');
+    localStorage.removeItem('cora_user_id');
+    localStorage.removeItem('cora_device_id');
+    localStorage.removeItem('cora_name');
+    localStorage.removeItem('cora_email');
+    localStorage.removeItem('cora_pairing_code');
+
+    state.paired = false;
+    state.anchorId = null;
+    state.userId = null;
+
+    closeSettings();
+    location.reload();
 }
 
 function saveSettings() {

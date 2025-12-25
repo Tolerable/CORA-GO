@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a1a2e">
+    <title>CORA-GO - Pair Device</title>
+    <link rel="stylesheet" href="css/cora-go.css">
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .pair-container {
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+        .logo {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+        .subtitle {
+            color: var(--accent2);
+            margin-bottom: 2rem;
+        }
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text);
+        }
+        .form-group {
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+        .form-group label {
+            display: block;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 0.3rem;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 1rem;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: var(--accent);
+            color: #000;
+        }
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+        .btn-primary:disabled {
+            background: var(--text-muted);
+            cursor: not-allowed;
+        }
+        .anchor-info {
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid var(--accent2);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        .anchor-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--accent2);
+        }
+        .anchor-id {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        .status {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+        .status.success {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid var(--ok);
+            color: var(--ok);
+        }
+        .status.error {
+            background: rgba(255, 51, 51, 0.1);
+            border: 1px solid var(--fail);
+            color: var(--fail);
+        }
+        .status.pending {
+            background: rgba(255, 0, 255, 0.1);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+        }
+        .code-display {
+            font-family: 'Consolas', monospace;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--ok);
+            letter-spacing: 2px;
+        }
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .step {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--border);
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+        .step.active {
+            background: var(--accent);
+            color: #000;
+        }
+        .step.done {
+            background: var(--ok);
+            color: #000;
+        }
+        .hidden { display: none !important; }
+
+        /* Camera scanner styles */
+        .scan-options {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .scan-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid var(--accent);
+            background: transparent;
+            color: var(--accent);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .scan-btn:hover, .scan-btn.active {
+            background: var(--accent);
+            color: #000;
+        }
+        .scan-btn svg {
+            width: 20px;
+            height: 20px;
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+        #cameraContainer {
+            position: relative;
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto 1rem;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #000;
+        }
+        #cameraFeed {
+            width: 100%;
+            display: block;
+        }
+        #cameraOverlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60%;
+            height: 60%;
+            border: 2px solid var(--accent);
+            border-radius: 8px;
+            box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);
+        }
+        .camera-hint {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="pair-container">
+        <div class="logo">CORA-GO</div>
+        <div class="subtitle">Pair Mobile Device</div>
+
+        <!-- Step 1: Enter/Validate Code -->
+        <div id="step1" class="card">
+            <div class="step-indicator">
+                <div class="step active" id="s1">1</div>
+                <div class="step" id="s2">2</div>
+                <div class="step" id="s3">3</div>
+            </div>
+
+            <div class="card-title">Scan or Enter Code</div>
+
+            <!-- Scan/Type toggle -->
+            <div class="scan-options" id="scanOptions">
+                <button class="scan-btn active" id="scanTabBtn" onclick="showScanMode()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                        <circle cx="12" cy="13" r="4"/>
+                    </svg>
+                    Scan QR
+                </button>
+                <button class="scan-btn" id="typeTabBtn" onclick="showTypeMode()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="4" width="20" height="16" rx="2"/>
+                        <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h8M6 16h12"/>
+                    </svg>
+                    Type Code
+                </button>
+            </div>
+
+            <!-- Camera scanner -->
+            <div id="cameraSection">
+                <div id="cameraContainer" class="hidden">
+                    <video id="cameraFeed" autoplay playsinline muted></video>
+                    <div id="cameraOverlay"></div>
+                </div>
+                <button class="btn btn-primary" id="startCameraBtn" onclick="startCamera()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                        <circle cx="12" cy="13" r="4"/>
+                    </svg>
+                    Open Camera
+                </button>
+                <p class="camera-hint">Point camera at QR code on your PC</p>
+            </div>
+
+            <!-- Code from URL (auto-detected) -->
+            <div id="codeFromUrl" class="anchor-info hidden">
+                <div class="code-display" id="displayCode"></div>
+                <div style="margin-top: 0.5rem; color: var(--text-muted);">Code detected!</div>
+            </div>
+
+            <!-- Manual input -->
+            <div id="codeInput" class="form-group hidden">
+                <label>Pairing Code</label>
+                <input type="text" id="pairCode" placeholder="CORA-XXXX" maxlength="9" autocomplete="off"
+                       style="text-transform: uppercase; text-align: center; font-size: 1.3rem; letter-spacing: 2px;">
+                <button class="btn btn-primary" id="validateBtn" onclick="validateCode()" style="margin-top: 1rem;">Validate Code</button>
+            </div>
+
+            <div id="step1Status" class="status hidden"></div>
+        </div>
+
+        <!-- Step 2: Enter Details -->
+        <div id="step2" class="card hidden">
+            <div class="step-indicator">
+                <div class="step done">1</div>
+                <div class="step active">2</div>
+                <div class="step">3</div>
+            </div>
+
+            <div class="anchor-info">
+                <div class="anchor-name" id="anchorName">PC Anchor</div>
+                <div class="anchor-id" id="anchorId"></div>
+            </div>
+
+            <div class="card-title">Your Details</div>
+
+            <div class="form-group">
+                <label>Name</label>
+                <input type="text" id="userName" placeholder="Your name" autocomplete="name">
+            </div>
+
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="userEmail" placeholder="your@email.com" autocomplete="email">
+            </div>
+
+            <button class="btn btn-primary" id="pairBtn" onclick="startPairing()">Pair Device</button>
+
+            <div id="step2Status" class="status hidden"></div>
+        </div>
+
+        <!-- Step 3: Verification -->
+        <div id="step3" class="card hidden">
+            <div class="step-indicator">
+                <div class="step done">1</div>
+                <div class="step done">2</div>
+                <div class="step active">3</div>
+            </div>
+
+            <div class="card-title">Check Your Email</div>
+
+            <p style="color: var(--text-muted); margin-bottom: 1rem;">
+                We sent a verification link to <strong id="sentEmail"></strong>
+            </p>
+
+            <p style="color: var(--text-muted);">
+                Click the link in the email to complete pairing.
+            </p>
+
+            <div id="step3Status" class="status pending">
+                Waiting for email verification...
+            </div>
+        </div>
+
+        <!-- Step 4: Success -->
+        <div id="step4" class="card hidden">
+            <div class="step-indicator">
+                <div class="step done">1</div>
+                <div class="step done">2</div>
+                <div class="step done">3</div>
+            </div>
+
+            <div style="font-size: 3rem; margin-bottom: 1rem;">&#10004;</div>
+
+            <div class="card-title" style="color: var(--ok);">Paired Successfully!</div>
+
+            <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+                Your device is now connected to <strong id="pairedAnchor"></strong>
+            </p>
+
+            <button class="btn btn-primary" onclick="goToApp()">Open CORA-GO</button>
+        </div>
+    </div>
+
+    <script>
+        // Supabase config (EZTUNES-LIVE)
+        const SUPABASE_URL = 'https://bugpycickribmdfprryq.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1Z3B5Y2lja3JpYm1kZnBycnlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2ODQ5MzgsImV4cCI6MjA3NTI2MDkzOH0.1S1ZoV4TvhIyUjKvwYE6wZexS2aM_EMNJzV9Gn8M1CI';
+
+        let currentCode = '';
+        let pairingInfo = null;
+        let videoStream = null;
+        let scanInterval = null;
+
+        // Camera/QR scanning functions
+        function showScanMode() {
+            document.getElementById('scanTabBtn').classList.add('active');
+            document.getElementById('typeTabBtn').classList.remove('active');
+            document.getElementById('cameraSection').classList.remove('hidden');
+            document.getElementById('codeInput').classList.add('hidden');
+            stopCamera(); // Stop if switching modes
+        }
+
+        function showTypeMode() {
+            document.getElementById('typeTabBtn').classList.add('active');
+            document.getElementById('scanTabBtn').classList.remove('active');
+            document.getElementById('cameraSection').classList.add('hidden');
+            document.getElementById('codeInput').classList.remove('hidden');
+            stopCamera();
+        }
+
+        async function startCamera() {
+            const video = document.getElementById('cameraFeed');
+            const container = document.getElementById('cameraContainer');
+            const btn = document.getElementById('startCameraBtn');
+
+            try {
+                // Request camera access
+                videoStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment' } // Prefer back camera
+                });
+
+                video.srcObject = videoStream;
+                container.classList.remove('hidden');
+                btn.textContent = 'Scanning...';
+                btn.disabled = true;
+
+                // Start QR detection
+                startQRDetection(video);
+
+            } catch (err) {
+                console.error('Camera error:', err);
+                showStatus('step1Status', 'Camera access denied. Use "Type Code" instead.', 'error');
+                showTypeMode();
+            }
+        }
+
+        function stopCamera() {
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+                videoStream = null;
+            }
+            if (scanInterval) {
+                clearInterval(scanInterval);
+                scanInterval = null;
+            }
+            const container = document.getElementById('cameraContainer');
+            const btn = document.getElementById('startCameraBtn');
+            container.classList.add('hidden');
+            btn.textContent = 'Open Camera';
+            btn.disabled = false;
+        }
+
+        function startQRDetection(video) {
+            // Use BarcodeDetector API if available (Chrome/Edge on Android)
+            if ('BarcodeDetector' in window) {
+                const detector = new BarcodeDetector({ formats: ['qr_code'] });
+
+                scanInterval = setInterval(async () => {
+                    try {
+                        const barcodes = await detector.detect(video);
+                        for (const barcode of barcodes) {
+                            processQRCode(barcode.rawValue);
+                            return;
+                        }
+                    } catch (e) {
+                        // Detection failed, keep trying
+                    }
+                }, 200);
+            } else {
+                // Fallback: Show message to use manual entry
+                showStatus('step1Status', 'QR scanning not supported in this browser. Trying alternative...', 'pending');
+
+                // Try using canvas-based detection with jsQR (load dynamically)
+                loadJsQR().then(() => {
+                    if (window.jsQR) {
+                        scanWithJsQR(video);
+                    } else {
+                        showStatus('step1Status', 'Use "Type Code" to enter manually.', 'error');
+                        stopCamera();
+                        showTypeMode();
+                    }
+                });
+            }
+        }
+
+        function loadJsQR() {
+            return new Promise((resolve) => {
+                if (window.jsQR) {
+                    resolve();
+                    return;
+                }
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js';
+                script.onload = resolve;
+                script.onerror = resolve;
+                document.head.appendChild(script);
+            });
+        }
+
+        function scanWithJsQR(video) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            scanInterval = setInterval(() => {
+                if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
+
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                ctx.drawImage(video, 0, 0);
+
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+                if (code) {
+                    processQRCode(code.data);
+                }
+            }, 200);
+        }
+
+        function processQRCode(data) {
+            // Extract code from URL or raw code
+            let code = data;
+
+            // If it's a URL, extract the code parameter
+            if (data.includes('?code=')) {
+                const url = new URL(data);
+                code = url.searchParams.get('code');
+            } else if (data.startsWith('CORA-')) {
+                code = data;
+            }
+
+            if (code && code.toUpperCase().startsWith('CORA-')) {
+                // Found valid code!
+                stopCamera();
+                currentCode = code.toUpperCase();
+
+                // Show the detected code
+                document.getElementById('codeFromUrl').classList.remove('hidden');
+                document.getElementById('displayCode').textContent = currentCode;
+                document.getElementById('cameraSection').classList.add('hidden');
+                document.getElementById('scanOptions').classList.add('hidden');
+
+                // Auto-validate
+                validateCode();
+            }
+        }
+
+        // Check for code in URL (from QR scan)
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlCode = urlParams.get('code');
+
+        // Check for token (from magic link)
+        const token = urlParams.get('token');
+
+        if (token) {
+            // Complete pairing via magic link
+            completePairing(token);
+        } else if (urlCode) {
+            document.getElementById('codeFromUrl').classList.remove('hidden');
+            document.getElementById('displayCode').textContent = urlCode.toUpperCase();
+            document.getElementById('cameraSection').classList.add('hidden');
+            document.getElementById('scanOptions').classList.add('hidden');
+            currentCode = urlCode.toUpperCase();
+            validateCode();
+        }
+
+        async function rpc(func, params = {}) {
+            try {
+                const resp = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${func}`, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(params)
+                });
+                return await resp.json();
+            } catch (e) {
+                return { error: e.message };
+            }
+        }
+
+        async function validateCode() {
+            const code = currentCode || document.getElementById('pairCode').value.toUpperCase();
+            if (!code || code.length < 8) {
+                showStatus('step1Status', 'Enter a valid pairing code', 'error');
+                return;
+            }
+
+            currentCode = code;
+            document.getElementById('validateBtn').disabled = true;
+            showStatus('step1Status', 'Validating...', 'pending');
+
+            const result = await rpc('get_pairing_info', { p_code: code });
+
+            document.getElementById('validateBtn').disabled = false;
+
+            if (result.error) {
+                showStatus('step1Status', result.error, 'error');
+                return;
+            }
+
+            // Valid code - show step 2
+            pairingInfo = result;
+            document.getElementById('anchorName').textContent = result.anchor_name || 'PC Anchor';
+            document.getElementById('anchorId').textContent = `ID: ${result.anchor_id}`;
+
+            document.getElementById('step1').classList.add('hidden');
+            document.getElementById('step2').classList.remove('hidden');
+        }
+
+        async function startPairing() {
+            const name = document.getElementById('userName').value.trim();
+            const email = document.getElementById('userEmail').value.trim();
+
+            if (!name) {
+                showStatus('step2Status', 'Please enter your name', 'error');
+                return;
+            }
+            if (!email || !email.includes('@')) {
+                showStatus('step2Status', 'Please enter a valid email', 'error');
+                return;
+            }
+
+            document.getElementById('pairBtn').disabled = true;
+            showStatus('step2Status', 'Creating account...', 'pending');
+
+            const result = await rpc('start_pairing', {
+                p_code: currentCode,
+                p_email: email,
+                p_name: name
+            });
+
+            document.getElementById('pairBtn').disabled = false;
+
+            if (result.error) {
+                showStatus('step2Status', result.error, 'error');
+                return;
+            }
+
+            // Save for later
+            localStorage.setItem('cora_email', email);
+            localStorage.setItem('cora_name', name);
+            localStorage.setItem('cora_pairing_code', currentCode);
+
+            // Show step 3
+            document.getElementById('sentEmail').textContent = email;
+            document.getElementById('step2').classList.add('hidden');
+            document.getElementById('step3').classList.remove('hidden');
+
+            // Start polling for completion
+            pollPairingStatus();
+        }
+
+        async function pollPairingStatus() {
+            const poll = async () => {
+                const result = await rpc('check_pairing_status', { p_code: currentCode });
+
+                if (result.status === 'claimed') {
+                    // Success!
+                    showSuccess(result);
+                } else if (result.status === 'expired') {
+                    showStatus('step3Status', 'Pairing code expired. Please start over.', 'error');
+                } else {
+                    // Keep polling
+                    setTimeout(poll, 3000);
+                }
+            };
+
+            poll();
+        }
+
+        async function completePairing(token) {
+            // Show loading state
+            document.getElementById('step1').innerHTML = `
+                <div class="status pending">Completing pairing...</div>
+            `;
+
+            const result = await rpc('complete_pairing', { p_token: token });
+
+            if (result.error) {
+                document.getElementById('step1').innerHTML = `
+                    <div class="status error">${result.error}</div>
+                    <button class="btn btn-primary" onclick="location.href='pair.html'" style="margin-top:1rem;">Try Again</button>
+                `;
+                return;
+            }
+
+            // Save credentials
+            localStorage.setItem('cora_user_id', result.user_id);
+            localStorage.setItem('cora_device_id', result.device_id);
+            localStorage.setItem('cora_anchor_id', result.anchor_id);
+            localStorage.setItem('cora_paired', 'true');
+
+            showSuccess(result);
+        }
+
+        function showSuccess(result) {
+            document.getElementById('step1').classList.add('hidden');
+            document.getElementById('step2').classList.add('hidden');
+            document.getElementById('step3').classList.add('hidden');
+            document.getElementById('step4').classList.remove('hidden');
+            document.getElementById('pairedAnchor').textContent = result.anchor_name || 'PC Anchor';
+
+            // Save paired state
+            localStorage.setItem('cora_paired', 'true');
+            if (result.anchor_id) {
+                localStorage.setItem('cora_anchor_id', result.anchor_id);
+            }
+        }
+
+        function showStatus(elementId, message, type) {
+            const el = document.getElementById(elementId);
+            el.textContent = message;
+            el.className = `status ${type}`;
+            el.classList.remove('hidden');
+        }
+
+        function goToApp() {
+            window.location.href = 'index.html';
+        }
+
+        // Check if already paired
+        if (localStorage.getItem('cora_paired') === 'true' && !token && !urlCode) {
+            const anchor = localStorage.getItem('cora_anchor_id');
+            if (confirm(`Already paired to ${anchor || 'a PC'}. Open CORA-GO?`)) {
+                goToApp();
+            }
+        }
+    </script>
+</body>
+</html>

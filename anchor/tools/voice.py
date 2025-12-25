@@ -36,7 +36,13 @@ def _init_tts():
     try:
         import pyttsx3
         _tts_engine = pyttsx3.init()
-        _tts_engine.setProperty('rate', 180)
+        _tts_engine.setProperty('rate', 150)  # Slower, more natural
+        # Try to use female voice (Zira on Windows)
+        voices = _tts_engine.getProperty('voices')
+        for v in voices:
+            if 'zira' in v.name.lower() or 'female' in v.name.lower():
+                _tts_engine.setProperty('voice', v.id)
+                break
         _tts_available = True
         _engine_type = "pyttsx3"
         return

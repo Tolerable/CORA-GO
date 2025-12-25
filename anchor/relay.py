@@ -19,14 +19,20 @@ from datetime import datetime
 from .config import config
 from . import tools
 
+# EZTUNES-LIVE Supabase - anon key is safe for client-side
+SUPABASE_URL = "https://bugpycickribmdfprryq.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1Z3B5Y2lja3JpYm1kZnBycnlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2ODQ5MzgsImV4cCI6MjA3NTI2MDkzOH0.1S1ZoV4TvhIyUjKvwYE6wZexS2aM_EMNJzV9Gn8M1CI"
+
 
 class Relay:
     """Supabase relay for PC<->Mobile communication."""
     
     def __init__(self):
-        self.url = config.get("relay.url", "")
-        self.key = config.get("relay.anon_key", "")
-        self.device_id = "anchor"
+        # Use config if set, else use hardcoded EZTUNES
+        self.url = config.get("relay.url", "") or SUPABASE_URL
+        self.key = config.get("relay.anon_key", "") or SUPABASE_KEY
+        # Get anchor_id from pairing or default
+        self.device_id = config.get("anchor.id", "anchor")
         self.running = False
         self._thread: Optional[threading.Thread] = None
     

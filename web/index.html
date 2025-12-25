@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a1a2e">
-    <meta name="description" content="CORA-GO - Mobile Control Panel">
+    <meta name="description" content="CORA-GO - Global Outreach Mobile Control">
     <title>CORA-GO</title>
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/svg+xml" href="assets/icons/icon.svg">
@@ -158,19 +158,19 @@
                     <button class="close-btn" onclick="closeSettings()">×</button>
                 </div>
                 <div class="modal-body">
+                    <!-- Pairing Status -->
                     <div class="setting-group">
-                        <label>Supabase URL</label>
-                        <input type="text" id="supabaseUrl" placeholder="https://xxx.supabase.co">
+                        <label>Device Pairing</label>
+                        <div id="pairingStatus" style="padding: 10px; background: #1a1a1a; border-radius: 8px; margin-top: 5px;">
+                            <span id="pairingStatusText">Not paired</span>
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <button id="pairBtn" onclick="location.href='pair.html'" style="padding: 8px 16px; background: var(--accent); color: #000; border: none; border-radius: 6px; cursor: pointer;">Pair Device</button>
+                            <button id="unpairBtn" onclick="unpairDevice()" style="padding: 8px 16px; background: #333; color: #fff; border: none; border-radius: 6px; cursor: pointer; margin-left: 8px; display: none;">Unpair</button>
+                        </div>
                     </div>
-                    <div class="setting-group">
-                        <label>Anon Key</label>
-                        <input type="text" id="supabaseKey" placeholder="eyJ...">
-                    </div>
-                    <div class="setting-group">
-                        <button class="full-width" onclick="testConnection()">Test Connection</button>
-                    </div>
-                    <hr>
-                    <div class="setting-group">
+
+                    <div class="setting-group" style="margin-top: 1rem;">
                         <label>AI Backend</label>
                         <select id="backendSelect">
                             <option value="pc">Via PC (Ollama)</option>

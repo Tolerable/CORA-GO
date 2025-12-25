@@ -4,38 +4,25 @@
  */
 
 const Relay = {
-    url: '',
-    key: '',
+    // EZTUNES-LIVE - anon key is public/safe (RLS handles security)
+    url: 'https://bugpycickribmdfprryq.supabase.co',
+    key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1Z3B5Y2lja3JpYm1kZnBycnlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2ODQ5MzgsImV4cCI6MjA3NTI2MDkzOH0.1S1ZoV4TvhIyUjKvwYE6wZexS2aM_EMNJzV9Gn8M1CI',
     pollInterval: null,
-    
-    // Initialize from localStorage
+    anchorId: null,  // Set from pairing
+
+    // Initialize with anchor ID from localStorage
     init() {
-        const saved = localStorage.getItem('cora-relay');
-        if (saved) {
-            const config = JSON.parse(saved);
-            this.url = config.url || '';
-            this.key = config.key || '';
-        }
+        this.anchorId = localStorage.getItem('cora_anchor_id') || 'anchor';
     },
-    
-    // Save config
-    save() {
-        localStorage.setItem('cora-relay', JSON.stringify({
-            url: this.url,
-            key: this.key
-        }));
+
+    // Check if device is paired
+    isPaired() {
+        return localStorage.getItem('cora_paired') === 'true';
     },
-    
-    // Configure relay
-    configure(url, key) {
-        this.url = url.replace(/\/$/, '');  // Remove trailing slash
-        this.key = key;
-        this.save();
-    },
-    
-    // Check if configured
+
+    // Always configured (credentials baked in)
     isConfigured() {
-        return !!(this.url && this.key);
+        return true;
     },
     
     // Make authenticated request
@@ -86,18 +73,29 @@ const Relay = {
         }
     },
     
-    // Get PC status
+    // Get PC status (filtered by anchor_id if paired)
     async getPCStatus() {
-        return await this.rpc('get_cora_status');
+        if (!this.isPaired()) {
+            return { error: 'Not paired' };
+        }
+        // Reinitialize anchor ID in case it changed
+        this.init();
+        return await this.rpc('get_cora_status', { p_anchor_id: this.anchorId });
     },
     
     // Send command to PC
     async sendCommand(command, params = {}) {
+        if (!this.isPaired()) {
+            return { error: 'Not paired' };
+        }
+        this.init();
+
         const result = await this.rpc('send_cora_command', {
             p_command: command,
-            p_params: params
+            p_params: params,
+            p_anchor_id: this.anchorId
         });
-        
+
         if (result && !result.error) {
             // Return command ID for tracking
             return { id: result, status: 'pending' };
