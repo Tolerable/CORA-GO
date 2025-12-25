@@ -92,32 +92,15 @@
                             <button class="icon-btn small" onclick="refreshBots()">🔄</button>
                         </div>
                         <div id="runningBots" class="card-body">
-                            <p class="muted">No bots running</p>
+                            <p class="muted">Connect to PC to see bots</p>
                         </div>
                     </div>
 
-                    <!-- Launch Bot -->
+                    <!-- Available Bots (populated from PC) -->
                     <div class="card">
-                        <div class="card-header">Launch Bot</div>
-                        <div class="card-body">
-                            <div class="bot-list">
-                                <button class="bot-btn" onclick="launchBot('INTOLERANT')">
-                                    <span class="bot-icon">🤖</span>
-                                    <span class="bot-name">INTOLERANT</span>
-                                </button>
-                                <button class="bot-btn" onclick="launchBot('ASTRID')">
-                                    <span class="bot-icon">🌟</span>
-                                    <span class="bot-name">ASTRID</span>
-                                </button>
-                                <button class="bot-btn" onclick="launchBot('OLLAMA')">
-                                    <span class="bot-icon">🦙</span>
-                                    <span class="bot-name">OLLAMA</span>
-                                </button>
-                                <button class="bot-btn" onclick="launchBot('TKINTER')">
-                                    <span class="bot-icon">🖼️</span>
-                                    <span class="bot-name">TKINTER</span>
-                                </button>
-                            </div>
+                        <div class="card-header">Available Bots</div>
+                        <div id="availableBots" class="card-body">
+                            <p class="muted">Bots will appear here when PC reports them</p>
                         </div>
                     </div>
 
@@ -127,9 +110,6 @@
                         <div class="card-body">
                             <select id="botSelect" class="full-width">
                                 <option value="">Select bot...</option>
-                                <option value="INTOLERANT">INTOLERANT</option>
-                                <option value="ASTRID">ASTRID</option>
-                                <option value="OLLAMA">OLLAMA</option>
                             </select>
                             <div class="input-row" style="margin-top:8px;">
                                 <input type="text" id="botMessage" placeholder="Message...">
