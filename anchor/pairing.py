@@ -86,8 +86,7 @@ class PairingManager:
             "code": code,
             "anchor_id": self.anchor_id,
             "anchor_name": self.anchor_name,
-            "expires_at": expires,
-            "status": "pending"
+            "expires_at": expires
         }
 
         try:
@@ -148,7 +147,7 @@ class PairingManager:
         """Check if a pairing code has been claimed."""
         # Query cora_pairing table directly instead of RPC
         try:
-            url = f"{self.url}/rest/v1/cora_pairing?code=eq.{code}&select=status,device_name,anchor_id"
+            url = f"{self.url}/rest/v1/cora_pairing?code=eq.{code}&select=claimed_at,claimed_by,anchor_id,anchor_name"
             headers = {
                 "apikey": self.key,
                 "Authorization": f"Bearer {self.key}",
@@ -158,11 +157,15 @@ class PairingManager:
                 data = json.load(resp)
                 if data and len(data) > 0:
                     row = data[0]
-                    return {
-                        "status": row.get("status", "pending"),
-                        "device_name": row.get("device_name"),
-                        "anchor_id": row.get("anchor_id")
-                    }
+                    # If claimed_at is set, pairing is complete
+                    if row.get("claimed_at"):
+                        return {
+                            "status": "claimed",
+                            "device_name": row.get("claimed_by", "Mobile"),
+                            "anchor_id": row.get("anchor_id"),
+                            "anchor_name": row.get("anchor_name")
+                        }
+                    return {"status": "pending"}
                 return {"status": "expired"}
         except Exception as e:
             return {"error": str(e)}

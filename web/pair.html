@@ -736,8 +736,7 @@
                         'Prefer': 'return=minimal'
                     },
                     body: JSON.stringify({
-                        status: 'claimed',
-                        device_name: deviceName,
+                        claimed_by: deviceName,
                         claimed_at: new Date().toISOString()
                     })
                 });
