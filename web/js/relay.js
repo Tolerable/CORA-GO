@@ -88,9 +88,42 @@ const Relay = {
             return { error: 'Not paired' };
         }
         this.init();
-        const result = await this.rpc('get_cora_status', { p_anchor_id: this.anchorId });
-        if (window.debugLog) debugLog('[RELAY] online=' + result?.online);
-        return result;
+
+        // Query table directly (RPC was returning incomplete data)
+        try {
+            const resp = await fetch(`${this.url}/rest/v1/cora_status?id=eq.${this.anchorId}&select=*`, {
+                headers: {
+                    'apikey': this.key,
+                    'Authorization': `Bearer ${this.key}`
+                }
+            });
+            const data = await resp.json();
+            if (window.debugLog) debugLog('[RELAY] raw data: ' + JSON.stringify(data).substring(0, 100));
+
+            if (!data || data.length === 0) {
+                if (window.debugLog) debugLog('[RELAY] No status row found');
+                return { online: false, error: 'No status found' };
+            }
+
+            const status = data[0];
+
+            // Check if stale (more than 60 seconds old)
+            if (status.last_seen) {
+                const lastSeen = new Date(status.last_seen);
+                const now = new Date();
+                const ageSeconds = (now - lastSeen) / 1000;
+                if (window.debugLog) debugLog('[RELAY] age=' + ageSeconds.toFixed(0) + 's');
+                if (ageSeconds > 60) {
+                    status.online = false;
+                }
+            }
+
+            if (window.debugLog) debugLog('[RELAY] online=' + status.online);
+            return status;
+        } catch (e) {
+            if (window.debugLog) debugLog('[RELAY] ERROR: ' + e.message);
+            return { error: e.message };
+        }
     },
     
     // Send command to PC
