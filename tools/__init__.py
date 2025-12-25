@@ -12,6 +12,7 @@ from .sentinel import start_sentinel, stop_sentinel, sentinel_status, get_incide
 from .bots import list_bots, launch_bot, stop_bot, running_bots, stop_all_bots
 from .voice import speak_local, list_voices, transcribe_audio, record_audio, listen_and_transcribe, get_tts_info
 from .sync import configure_sync, sync_status, sync_notes_up, sync_notes_down, register_device, heartbeat, push_system_status
+from .feeds import fetch_rss, fetch_json_feed, get_news, parse_feed_items, monitor_feed
 
 __all__ = [
     # Files
@@ -31,5 +32,7 @@ __all__ = [
     # Voice
     'speak_local', 'list_voices', 'transcribe_audio', 'record_audio', 'listen_and_transcribe', 'get_tts_info',
     # Sync
-    'configure_sync', 'sync_status', 'sync_notes_up', 'sync_notes_down', 'register_device', 'heartbeat', 'push_system_status'
+    'configure_sync', 'sync_status', 'sync_notes_up', 'sync_notes_down', 'register_device', 'heartbeat', 'push_system_status',
+    # Feeds
+    'fetch_rss', 'fetch_json_feed', 'get_news', 'parse_feed_items', 'monitor_feed'
 ]
