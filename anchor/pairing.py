@@ -86,7 +86,8 @@ class PairingManager:
             "code": code,
             "anchor_id": self.anchor_id,
             "anchor_name": self.anchor_name,
-            "expires_at": expires
+            "expires_at": expires,
+            "status": "pending"
         }
 
         try:
@@ -145,8 +146,26 @@ class PairingManager:
 
     def check_pairing_status(self, code: str) -> Dict:
         """Check if a pairing code has been claimed."""
-        result = self._rpc("check_pairing_status", {"p_code": code})
-        return result if isinstance(result, dict) else {"error": str(result)}
+        # Query cora_pairing table directly instead of RPC
+        try:
+            url = f"{self.url}/rest/v1/cora_pairing?code=eq.{code}&select=status,device_name,anchor_id"
+            headers = {
+                "apikey": self.key,
+                "Authorization": f"Bearer {self.key}",
+            }
+            req = urllib.request.Request(url, headers=headers, method="GET")
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                data = json.load(resp)
+                if data and len(data) > 0:
+                    row = data[0]
+                    return {
+                        "status": row.get("status", "pending"),
+                        "device_name": row.get("device_name"),
+                        "anchor_id": row.get("anchor_id")
+                    }
+                return {"status": "expired"}
+        except Exception as e:
+            return {"error": str(e)}
 
     def start_pairing_poll(self, code: str, callback: Callable[[Dict], None], interval: float = 2.0):
         """Start polling for pairing completion."""
