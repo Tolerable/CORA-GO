@@ -320,12 +320,22 @@ def show_pairing_window():
             config.set("paired_device", device_name)
             config.set("anchor.id", pairing.anchor_id)
 
-            # Close after short delay
-            def close_window():
+            # Start the relay immediately!
+            def start_relay_and_close():
+                try:
+                    from .relay import relay
+                    relay.device_id = pairing.anchor_id
+                    if relay.is_configured():
+                        # Send first heartbeat so mobile sees us online
+                        relay.heartbeat()
+                        relay.start()
+                        print(f"[PAIRING] Relay started - mobile should see us online now!")
+                except Exception as e:
+                    print(f"[PAIRING] Failed to start relay: {e}")
                 print("[PAIRING] Closing window")
                 root.destroy()
 
-            root.after(2000, close_window)
+            root.after(1500, start_relay_and_close)
 
     # Poll in main thread using root.after (thread-safe)
     def poll_status():
