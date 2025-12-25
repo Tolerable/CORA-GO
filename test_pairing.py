@@ -7,16 +7,39 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-# Setup path
+# Setup path FIRST
 sys.path.insert(0, str(Path(__file__).parent))
 
-SUPABASE_URL = 'https://bugpycickribmdfprryq.supabase.co'
-SUPABASE_KEY = 'sb_publishable_c9Q2joJ8g7g7ntdrzbnzbA_RJfa_5jt'
+# Force reload of pairing module to get latest code
+import importlib
+from anchor import pairing as pairing_module
+importlib.reload(pairing_module)
+from anchor.pairing import pairing, show_pairing_window, SUPABASE_URL, SUPABASE_KEY
 
-def claim_code(code):
-    """Simulate mobile claiming the code."""
-    time.sleep(5)  # Wait for window to open
-    print(f'\n[MOBILE] Claiming code {code}...')
+print(f'Using key: {SUPABASE_KEY[:25]}...')
+
+# Global to store the code from window
+window_code = None
+
+def claim_after_window_opens():
+    """Wait for window to generate code, then claim it."""
+    global window_code
+    time.sleep(3)  # Wait for window
+
+    # Get the current code from pairing instance
+    code = pairing.current_code
+    if not code:
+        print('[MOBILE] No code found yet, waiting...')
+        time.sleep(3)
+        code = pairing.current_code
+
+    if not code:
+        print('[MOBILE] ERROR: No code generated')
+        return
+
+    print(f'\n[MOBILE] Found code: {code}')
+    print(f'[MOBILE] Claiming...')
+
     url = f'{SUPABASE_URL}/rest/v1/cora_pairing?code=eq.{code}'
     headers = {
         'apikey': SUPABASE_KEY,
@@ -28,34 +51,22 @@ def claim_code(code):
     req = urllib.request.Request(url, data=body, headers=headers, method='PATCH')
     try:
         with urllib.request.urlopen(req, timeout=10) as resp:
-            print(f'[MOBILE] Claimed successfully!')
-            return True
+            result = resp.read().decode()
+            print(f'[MOBILE] Claimed! Response: {result[:80]}...')
     except Exception as e:
         print(f'[MOBILE] Claim error: {e}')
-        return False
 
 if __name__ == "__main__":
-    from anchor.pairing import pairing, show_pairing_window
-
-    # Generate code first
-    result = pairing.generate_pairing_code()
-    if 'error' in result:
-        print(f'ERROR: {result}')
-        sys.exit(1)
-
-    code = result['code']
-    print(f'Generated code: {code}')
-    print(f'QR URL: {result["qr_url"]}')
-    print(f'\nWindow will open. Code will be claimed in 5 seconds.')
-    print(f'Watch for: [POLL] Status: ... messages')
-    print(f'Should show: CONNECTED to Mobile!')
-    print(f'Then close after 2 seconds.\n')
+    print(f'Pairing URL: {pairing.url}')
+    print(f'Pairing key: {pairing.key[:25]}...')
+    print(f'\nStarting window...')
+    print(f'Will claim whatever code the window generates.\n')
 
     # Start claim thread
-    claim_thread = threading.Thread(target=claim_code, args=(code,), daemon=True)
+    claim_thread = threading.Thread(target=claim_after_window_opens, daemon=True)
     claim_thread.start()
 
-    # Show window (blocking)
+    # Show window (blocking) - this generates its own code
     show_pairing_window()
 
     print('\n=== WINDOW CLOSED - TEST COMPLETE ===')

@@ -152,9 +152,12 @@ class PairingManager:
                 "apikey": self.key,
                 "Authorization": f"Bearer {self.key}",
             }
+            print(f"[DEBUG] Checking: {url}")
+            print(f"[DEBUG] Using key: {self.key[:20]}...")
             req = urllib.request.Request(url, headers=headers, method="GET")
             with urllib.request.urlopen(req, timeout=10) as resp:
                 data = json.load(resp)
+                print(f"[DEBUG] Raw data: {data}")
                 if data and len(data) > 0:
                     row = data[0]
                     # If claimed_at is set, pairing is complete
@@ -168,6 +171,7 @@ class PairingManager:
                     return {"status": "pending"}
                 return {"status": "expired"}
         except Exception as e:
+            print(f"[DEBUG] Error: {e}")
             return {"error": str(e)}
 
     def start_pairing_poll(self, code: str, callback: Callable[[Dict], None], interval: float = 2.0):
