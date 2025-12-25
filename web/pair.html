@@ -690,38 +690,24 @@
             }
 
             document.getElementById('pairBtn').disabled = true;
-            showStatus('step2Status', 'Creating account...', 'pending');
+            showStatus('step2Status', 'Pairing...', 'pending');
 
-            const result = await rpc('start_pairing', {
-                p_code: currentCode,
-                p_email: email,
-                p_name: name
-            });
-
-            document.getElementById('pairBtn').disabled = false;
-
-            if (result.error) {
-                showStatus('step2Status', result.error, 'error');
-                return;
-            }
-
-            // Save credentials
+            // Save credentials locally
             localStorage.setItem('cora_email', email);
             localStorage.setItem('cora_name', name);
             localStorage.setItem('cora_pairing_code', currentCode);
             localStorage.setItem('cora_paired', 'true');
-
-            // Save any IDs from result
-            if (result.user_id) localStorage.setItem('cora_user_id', result.user_id);
-            if (result.device_id) localStorage.setItem('cora_device_id', result.device_id);
-            if (result.anchor_id) localStorage.setItem('cora_anchor_id', result.anchor_id);
-            if (pairingInfo && pairingInfo.anchor_id) localStorage.setItem('cora_anchor_id', pairingInfo.anchor_id);
+            if (pairingInfo && pairingInfo.anchor_id) {
+                localStorage.setItem('cora_anchor_id', pairingInfo.anchor_id);
+            }
 
             // Claim the pairing in database so anchor knows we're done
             await claimPairing(currentCode, name);
 
-            // ALWAYS go to success - no email verification needed
-            showSuccess(result.anchor_name ? result : pairingInfo || {anchor_name: 'PC Anchor'});
+            document.getElementById('pairBtn').disabled = false;
+
+            // Go to success
+            showSuccess(pairingInfo || {anchor_name: 'PC Anchor'});
         }
 
         async function claimPairing(code, deviceName) {
