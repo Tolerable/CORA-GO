@@ -356,7 +356,7 @@
     <script>
         // Supabase config (EZTUNES-LIVE)
         const SUPABASE_URL = 'https://bugpycickribmdfprryq.supabase.co';
-        const SUPABASE_KEY = 'sb_secret_6J4iNVJCBckqYECbbxz1OQ_248Vktk9'; // Updated key (legacy disabled)
+        const SUPABASE_KEY = 'sb_publishable_c9Q2joJ8g7g7ntdrzbnzbA_RJfa_5jt';
 
         let currentCode = '';
         let pairingInfo = null;
@@ -725,9 +725,9 @@
         }
 
         async function claimPairing(code, deviceName) {
-            // Update cora_pairing to mark as claimed
+            // Update cora_pairing to mark as claimed (claimed_at triggers anchor to close)
             try {
-                await fetch(`${SUPABASE_URL}/rest/v1/cora_pairing?code=eq.${code}`, {
+                const resp = await fetch(`${SUPABASE_URL}/rest/v1/cora_pairing?code=eq.${code}`, {
                     method: 'PATCH',
                     headers: {
                         'apikey': SUPABASE_KEY,
@@ -736,11 +736,10 @@
                         'Prefer': 'return=minimal'
                     },
                     body: JSON.stringify({
-                        claimed_by: deviceName,
                         claimed_at: new Date().toISOString()
                     })
                 });
-                console.log('Pairing claimed in database');
+                console.log('Pairing claimed:', resp.ok);
             } catch (e) {
                 console.error('Failed to claim pairing:', e);
             }
