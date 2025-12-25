@@ -528,27 +528,59 @@
             if (debugEl) debugEl.textContent = 'Processing: ' + data;
 
             try {
+                // Clean up the data
+                data = data.trim();
+
+                // Try to decode if URL-encoded (qrserver might double-encode)
+                try {
+                    if (data.includes('%3F') || data.includes('%26') || data.includes('%3D')) {
+                        data = decodeURIComponent(data);
+                        console.log('Decoded URL:', data);
+                    }
+                } catch (e) {
+                    console.log('Decode failed, using raw:', e);
+                }
+
                 // Extract code from URL or raw code
                 let code = null;
 
-                // If it's a URL with code parameter
-                if (data.includes('?code=') || data.includes('&code=')) {
-                    try {
-                        const url = new URL(data);
-                        code = url.searchParams.get('code');
-                        console.log('Extracted from URL:', code);
-                    } catch (e) {
-                        // URL parsing failed, try regex
-                        const match = data.match(/[?&]code=([A-Z0-9-]+)/i);
-                        if (match) code = match[1];
-                        console.log('Extracted via regex:', code);
-                    }
-                } else if (data.toUpperCase().startsWith('CORA-')) {
-                    code = data;
+                // Method 1: Direct CORA code
+                if (data.toUpperCase().startsWith('CORA-')) {
+                    code = data.split(/[\s?&#]/)[0]; // Take just the code part
                     console.log('Direct CORA code:', code);
                 }
 
-                if (debugEl) debugEl.textContent = 'Code extracted: ' + (code || 'NONE');
+                // Method 2: URL with code parameter
+                if (!code && (data.includes('code=') || data.includes('CODE='))) {
+                    // Try URL parsing first
+                    try {
+                        const url = new URL(data);
+                        code = url.searchParams.get('code');
+                        console.log('Extracted from URL object:', code);
+                    } catch (e) {
+                        console.log('URL parse failed:', e.message);
+                    }
+
+                    // Fallback: regex for code=XXXX
+                    if (!code) {
+                        const match = data.match(/code=([A-Z0-9-]+)/i);
+                        if (match) {
+                            code = match[1];
+                            console.log('Extracted via regex:', code);
+                        }
+                    }
+                }
+
+                // Method 3: Look for CORA-XXXX anywhere in the string
+                if (!code) {
+                    const coraMatch = data.match(/CORA-[A-Z0-9]{4}/i);
+                    if (coraMatch) {
+                        code = coraMatch[0];
+                        console.log('Found CORA pattern in string:', code);
+                    }
+                }
+
+                if (debugEl) debugEl.textContent = 'Code extracted: ' + (code || 'NONE') + ' from: ' + data.substring(0, 60);
 
                 if (code && code.toUpperCase().startsWith('CORA-')) {
                     // Found valid code!
@@ -571,7 +603,7 @@
                     validateCode();
                 } else {
                     console.log('No valid CORA code in:', data);
-                    if (debugEl) debugEl.textContent = 'No CORA code found in: ' + data.substring(0, 50);
+                    if (debugEl) debugEl.textContent = 'No CORA- code found. Raw: ' + data.substring(0, 80);
                 }
             } catch (e) {
                 console.error('processQRCode error:', e);
