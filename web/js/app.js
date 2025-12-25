@@ -140,6 +140,15 @@ async function queryOllama(prompt) {
 }
 
 async function queryPollinations(prompt) {
+    // Try tool-enabled OpenAI endpoint first
+    try {
+        const result = await queryPollinationsWithTools(prompt);
+        if (result) return result;
+    } catch (e) {
+        console.log('Tool calling failed, falling back to simple endpoint');
+    }
+
+    // Fallback to simple endpoint
     const systemPrompt = getPersonaPrompt();
     const url = `https://text.pollinations.ai/${encodeURIComponent(prompt)}?system=${encodeURIComponent(systemPrompt)}`;
 
@@ -153,10 +162,174 @@ async function queryPollinations(prompt) {
     return text.trim();
 }
 
+// Tool definitions for Pollinations OpenAI endpoint
+const CORA_TOOLS = [
+    {
+        type: "function",
+        function: {
+            name: "get_current_time",
+            description: "Get the current date and time",
+            parameters: {
+                type: "object",
+                properties: {},
+                required: []
+            }
+        }
+    },
+    {
+        type: "function",
+        function: {
+            name: "get_weather",
+            description: "Get current weather for a location",
+            parameters: {
+                type: "object",
+                properties: {
+                    location: {
+                        type: "string",
+                        description: "City name, e.g. 'London' or 'New York'"
+                    }
+                },
+                required: ["location"]
+            }
+        }
+    },
+    {
+        type: "function",
+        function: {
+            name: "generate_image",
+            description: "Generate an AI image from a text description",
+            parameters: {
+                type: "object",
+                properties: {
+                    prompt: {
+                        type: "string",
+                        description: "Description of the image to generate"
+                    }
+                },
+                required: ["prompt"]
+            }
+        }
+    }
+];
+
+// Execute tool calls
+async function executeToolCall(name, args) {
+    switch (name) {
+        case 'get_current_time':
+            const now = new Date();
+            return JSON.stringify({
+                date: now.toLocaleDateString(),
+                time: now.toLocaleTimeString(),
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                day: now.toLocaleDateString('en-US', { weekday: 'long' })
+            });
+
+        case 'get_weather':
+            try {
+                const resp = await fetch(`https://wttr.in/${encodeURIComponent(args.location)}?format=j1`);
+                if (!resp.ok) throw new Error('Weather unavailable');
+                const data = await resp.json();
+                const current = data.current_condition[0];
+                return JSON.stringify({
+                    location: args.location,
+                    temp_c: current.temp_C,
+                    temp_f: current.temp_F,
+                    condition: current.weatherDesc[0].value,
+                    humidity: current.humidity + '%',
+                    wind: current.windspeedMiles + ' mph'
+                });
+            } catch (e) {
+                return JSON.stringify({ error: 'Could not fetch weather', location: args.location });
+            }
+
+        case 'generate_image':
+            const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(args.prompt)}?width=512&height=512&nologo=true`;
+            // Show image in chat
+            setTimeout(() => {
+                const imgDiv = document.createElement('div');
+                imgDiv.className = 'message ai';
+                imgDiv.innerHTML = `
+                    <div class="sender">CORA-GO</div>
+                    <div class="text"><img src="${imageUrl}" alt="${args.prompt}" style="max-width:100%;border-radius:8px;"></div>
+                `;
+                messagesEl.appendChild(imgDiv);
+                scrollToBottom();
+            }, 100);
+            return JSON.stringify({ status: 'Image generated', prompt: args.prompt, url: imageUrl });
+
+        default:
+            return JSON.stringify({ error: 'Unknown tool' });
+    }
+}
+
+// Query Pollinations with tool calling
+async function queryPollinationsWithTools(prompt, followUpMessages = null) {
+    const systemPrompt = getPersonaPrompt();
+
+    let messages;
+    if (followUpMessages) {
+        messages = [{ role: 'system', content: systemPrompt }, ...followUpMessages];
+    } else {
+        messages = [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: prompt }
+        ];
+    }
+
+    const response = await fetch('https://text.pollinations.ai/openai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            model: 'openai',
+            messages: messages,
+            tools: CORA_TOOLS,
+            tool_choice: 'auto',
+            seed: Date.now()
+        })
+    });
+
+    if (!response.ok) throw new Error('Pollinations OpenAI unavailable');
+
+    const data = await response.json();
+
+    // Check for tool calls
+    if (data.choices?.[0]?.message?.tool_calls?.length > 0) {
+        const toolCall = data.choices[0].message.tool_calls[0];
+        console.log('Tool call:', toolCall.function.name);
+
+        try {
+            const args = JSON.parse(toolCall.function.arguments);
+            const result = await executeToolCall(toolCall.function.name, args);
+
+            // Send result back to AI for natural response
+            const followUp = [
+                { role: 'user', content: prompt },
+                { role: 'assistant', content: null, tool_calls: [toolCall] },
+                { role: 'tool', tool_call_id: toolCall.id, name: toolCall.function.name, content: result }
+            ];
+
+            return await queryPollinationsWithTools(prompt, followUp);
+        } catch (e) {
+            console.error('Tool execution error:', e);
+            return data.choices[0].message.content || 'Tool error occurred';
+        }
+    }
+
+    // Regular response
+    let text = data.choices?.[0]?.message?.content || '';
+    text = text.replace(/\n---\n\*\*Support Pollinations.*/s, '');
+    text = text.replace(/\n🌸.*Pollinations.*/s, '');
+    return text.trim();
+}
+
 function getPersonaPrompt() {
     const baseContext = `You are CORA-GO, a mobile AI assistant.
-IMPORTANT: Be honest about your capabilities. In this browser interface you can ONLY chat - you cannot access hardware, cameras, files, or system controls.
-The desktop CLI version has more tools. Do NOT make up hardware specs or claim capabilities you don't have.
+You have these REAL tools available via function calling:
+- get_current_time: Get the actual current date, time, and day
+- get_weather: Get real weather for any city (use this when asked about weather!)
+- generate_image: Generate AI images from text descriptions
+
+IMPORTANT: Use these tools when relevant! If someone asks the time or weather, CALL THE TOOL.
 Keep responses concise (2-3 sentences unless asked for more).`;
 
     const personas = {
