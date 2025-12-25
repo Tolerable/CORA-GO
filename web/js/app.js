@@ -124,19 +124,30 @@ async function getAIResponse(prompt) {
 }
 
 async function queryOllama(prompt) {
-    const response = await fetch('http://localhost:11434/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            model: 'llama3.2:3b',
-            prompt: `${getPersonaPrompt()}\n\nUser: ${prompt}\n\nAssistant:`,
-            stream: false
-        })
-    });
+    // Quick timeout for mobile (no local Ollama)
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 2000);
 
-    if (!response.ok) throw new Error('Ollama unavailable');
-    const data = await response.json();
-    return data.response?.trim();
+    try {
+        const response = await fetch('http://localhost:11434/api/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: 'llama3.2:3b',
+                prompt: `${getPersonaPrompt()}\n\nUser: ${prompt}\n\nAssistant:`,
+                stream: false
+            }),
+            signal: controller.signal
+        });
+
+        clearTimeout(timeout);
+        if (!response.ok) throw new Error('Ollama unavailable');
+        const data = await response.json();
+        return data.response?.trim();
+    } catch (e) {
+        clearTimeout(timeout);
+        throw e;
+    }
 }
 
 async function queryPollinations(prompt) {
