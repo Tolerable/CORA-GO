@@ -815,8 +815,8 @@
             console.log('Command:', command, params);
 
             // Try to use the relay if configured
-            if (typeof relay !== 'undefined' && relay.sendCommand) {
-                return await relay.sendCommand(command, params);
+            if (typeof Relay !== 'undefined' && Relay.runTool) {
+                return await Relay.runTool(command, params);
             }
 
             return { error: 'PC not connected' };
