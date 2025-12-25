@@ -862,10 +862,34 @@ class BootDisplay:
                     pairing.stop_pairing_poll()
                     return
                 status = pairing.check_pairing_status(code)
+                print(f"[POLL] Status: {status}", flush=True)
                 if status.get("status") == "claimed":
-                    status_lbl.config(text="Paired!", fg='#00ff88')
+                    status_lbl.config(text="CONNECTED!", fg='#00ff88')
                     self.log_ok(f"Paired with mobile!")
-                    pair_win.after(2000, pair_win.destroy)
+
+                    # Save pairing to config
+                    from anchor.config import config
+                    device_name = status.get('device_name') or status.get('anchor_name') or 'Mobile'
+                    config.set("paired", True)
+                    config.set("paired_device", device_name)
+                    config.set("anchor.id", pairing.anchor_id)
+
+                    # Start the relay so mobile sees us online
+                    def start_relay_and_close():
+                        try:
+                            from anchor.relay import relay
+                            relay.device_id = pairing.anchor_id
+                            if relay.is_configured():
+                                relay.heartbeat()
+                                relay.start()
+                                print("[PAIRING] Relay started - mobile should see us online!")
+                                self.log_ok("Relay started!")
+                        except Exception as e:
+                            print(f"[PAIRING] Failed to start relay: {e}")
+                            self.log_warn(f"Relay error: {e}")
+                        pair_win.destroy()
+
+                    pair_win.after(1500, start_relay_and_close)
                 elif status.get("status") == "expired":
                     status_lbl.config(text="Code expired", fg='#ff3333')
                 else:
