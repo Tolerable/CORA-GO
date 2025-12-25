@@ -81,8 +81,9 @@ class PairingManager:
     def get_qr_url(self, code: str) -> str:
         """Get the URL to encode in QR code."""
         # This URL will open the mobile pairing page
-        base_url = config.get("web.url", "https://cora-go.web.app")
-        return f"{base_url}/pair.html?code={code}"
+        # GitHub Pages: https://tolerable.github.io/CORA-GO/
+        base_url = config.get("web.url", "https://tolerable.github.io/CORA-GO")
+        return f"{base_url}/web/pair.html?code={code}"
 
     def generate_qr_image(self, code: str, size: int = 200) -> Optional[bytes]:
         """Generate QR code image as PNG bytes."""

@@ -41,12 +41,15 @@ function checkPairingStatus() {
     state.anchorId = localStorage.getItem('cora_anchor_id');
     state.userId = localStorage.getItem('cora_user_id');
 
+    const banner = document.getElementById('pairingBanner');
+
     if (!state.paired) {
-        // Not paired - show pairing prompt
-        addMessage('ai', 'Welcome to CORA-GO! To connect to your PC, please pair your device first.');
-        addMessage('ai', '<a href="pair.html" style="color:#00ffff;">Tap here to pair your device</a>');
+        // Not paired - show pairing banner prominently
+        if (banner) banner.style.display = 'block';
+        addMessage('ai', 'Welcome to CORA-GO! Tap the banner above to pair with your PC.');
         pcInfoEl.innerHTML = '<p class="muted"><a href="pair.html">Pair device to connect</a></p>';
     } else {
+        if (banner) banner.style.display = 'none';
         addMessage('ai', 'CORA-GO ready. Checking PC connection...');
         startPCPolling();
     }

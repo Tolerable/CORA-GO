@@ -1,8 +1,11 @@
 # CORA-GO Vision & Architecture
 
+**Cognitive Operations & Reasoning Assistant - Global Outreach**
+
 **Version:** 2.0.0-alpha
 **Date:** 2025-12-25
-**Status:** Rebuilding from scratch
+**Status:** Active Development
+**Origin:** Merged from Unity Lab AI (CORA) + AI-Ministries (MINIBOT)
 
 ## Overview
 
