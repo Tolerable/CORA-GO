@@ -83,11 +83,6 @@ function switchTab(tabId) {
         panel.classList.toggle('active', panel.id === tabId);
     });
     state.currentTab = tabId;
-
-    // Auto-refresh bots when switching to Bots tab
-    if (tabId === 'botsTab' && state.pcOnline) {
-        refreshBots();
-    }
 }
 
 // ========== MESSAGES ==========
@@ -244,138 +239,28 @@ async function runTool(toolName, params) {
 }
 
 // ========== BOT CONTROL ==========
-async function refreshBots() {
-    if (!state.pcOnline) {
-        document.getElementById('availableBots').innerHTML = '<p class="muted">Connect to PC first</p>';
-        return;
-    }
-
-    document.getElementById('availableBots').innerHTML = '<p class="muted">Loading bots...</p>';
-    document.getElementById('runningBots').innerHTML = '<p class="muted">Loading...</p>';
-
-    try {
-        const result = await Relay.runTool('list_bots', {});
-
-        if (result.bots && result.bots.length > 0) {
-            // Populate available bots
-            let html = '<div class="bot-list">';
-            let selectHtml = '<option value="">Select bot...</option>';
-
-            result.bots.forEach(bot => {
-                const statusClass = bot.running ? 'running' : 'stopped';
-                const statusIcon = bot.running ? '🟢' : '⚫';
-                html += `
-                    <div class="bot-item ${statusClass}">
-                        <span class="bot-name">${statusIcon} ${bot.name}</span>
-                        <span class="bot-type">${bot.type}</span>
-                        <div class="bot-actions">
-                            ${bot.running
-                                ? `<button class="tool-btn small" onclick="stopBot('${bot.name}')">⏹ Stop</button>`
-                                : `<button class="tool-btn small" onclick="launchBot('${bot.name}')">▶ Start</button>`
-                            }
-                        </div>
-                    </div>
-                `;
-                selectHtml += `<option value="${bot.name}">${bot.name}</option>`;
-            });
-            html += '</div>';
-
-            document.getElementById('availableBots').innerHTML = html;
-            document.getElementById('botSelect').innerHTML = selectHtml;
-
-            // Show running bots
-            const running = result.bots.filter(b => b.running);
-            if (running.length > 0) {
-                document.getElementById('runningBots').innerHTML = running.map(b =>
-                    `<div class="bot-running">🟢 ${b.name} (PID: ${b.pid})</div>`
-                ).join('');
-            } else {
-                document.getElementById('runningBots').innerHTML = '<p class="muted">No bots running</p>';
-            }
-        } else {
-            document.getElementById('availableBots').innerHTML = '<p class="muted">No bots found in C:/claude</p>';
-        }
-    } catch (e) {
-        document.getElementById('availableBots').innerHTML = `<p class="error">Error: ${e.message}</p>`;
-    }
-}
-
 async function launchBot(botName) {
     if (!state.pcOnline) {
         alert('PC is offline');
         return;
     }
-
-    addMessage('ai', `Launching ${botName}...`);
-
-    try {
-        const result = await Relay.runTool('launch_bot', { name: botName });
-
-        if (result.success) {
-            addMessage('ai', `✅ ${botName} launched (PID: ${result.pid})`);
-            refreshBots(); // Refresh the list
-        } else {
-            addMessage('ai', `❌ Failed: ${result.error}`);
-        }
-    } catch (e) {
-        addMessage('ai', `❌ Error: ${e.message}`);
-    }
+    alert('Launching ' + botName + '...');
+    // TODO: Send command to PC
 }
 
-async function stopBot(botName) {
-    if (!state.pcOnline) {
-        alert('PC is offline');
-        return;
-    }
-
-    addMessage('ai', `Stopping ${botName}...`);
-
-    try {
-        const result = await Relay.runTool('stop_bot', { name: botName });
-
-        if (result.success) {
-            addMessage('ai', `✅ ${botName} stopped`);
-            refreshBots(); // Refresh the list
-        } else {
-            addMessage('ai', `❌ Failed: ${result.error}`);
-        }
-    } catch (e) {
-        addMessage('ai', `❌ Error: ${e.message}`);
-    }
+function refreshBots() {
+    alert('Refreshing bots...');
 }
 
-async function sendToBot() {
+function sendToBot() {
     const bot = document.getElementById('botSelect').value;
-    const msg = document.getElementById('botMessage').value.trim();
-
+    const msg = document.getElementById('botMessage').value;
     if (!bot || !msg) {
         alert('Select a bot and enter a message');
         return;
     }
-
-    if (!state.pcOnline) {
-        alert('PC is offline');
-        return;
-    }
-
-    addMessage('user', `@${bot}: ${msg}`);
+    alert('Sending to ' + bot + ': ' + msg);
     document.getElementById('botMessage').value = '';
-
-    // Send via relay as a command to the bot's inbox
-    try {
-        const result = await Relay.runTool('write_file', {
-            path: `C:/claude/${bot}/inbox/msg_${Date.now()}.txt`,
-            content: msg
-        });
-
-        if (result.success !== false) {
-            addMessage('ai', `Message sent to ${bot}'s inbox`);
-        } else {
-            addMessage('ai', `Failed to send: ${result.error || 'Unknown error'}`);
-        }
-    } catch (e) {
-        addMessage('ai', `Error: ${e.message}`);
-    }
 }
 
 // ========== SETTINGS ==========

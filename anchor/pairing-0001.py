@@ -64,46 +64,20 @@ class PairingManager:
 
     def generate_pairing_code(self) -> Dict:
         """Generate a new pairing code for QR display."""
-        import random
-        from datetime import datetime, timedelta, timezone
+        result = self._rpc("generate_pairing_code", {
+            "p_anchor_id": self.anchor_id,
+            "p_anchor_name": self.anchor_name
+        })
 
-        # Generate CORA-XXXX code locally (bypass broken RPC)
-        chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-        code = 'CORA-' + ''.join(random.choices(chars, k=4))
+        if isinstance(result, str):
+            self.current_code = result
+            return {
+                "code": result,
+                "anchor_id": self.anchor_id,
+                "qr_url": self.get_qr_url(result)
+            }
 
-        # Calculate expiry (5 minutes)
-        expires = (datetime.now(timezone.utc) + timedelta(minutes=5)).isoformat()
-
-        # Insert directly into cora_pairing table
-        url = f"{self.url}/rest/v1/cora_pairing"
-        headers = {
-            "apikey": self.key,
-            "Authorization": f"Bearer {self.key}",
-            "Content-Type": "application/json",
-            "Prefer": "return=representation"
-        }
-        data = {
-            "code": code,
-            "anchor_id": self.anchor_id,
-            "anchor_name": self.anchor_name,
-            "expires_at": expires
-        }
-
-        try:
-            body = json.dumps(data).encode()
-            req = urllib.request.Request(url, data=body, headers=headers, method="POST")
-            with urllib.request.urlopen(req, timeout=10) as resp:
-                if resp.status in [200, 201]:
-                    self.current_code = code
-                    return {
-                        "code": code,
-                        "anchor_id": self.anchor_id,
-                        "qr_url": self.get_qr_url(code)
-                    }
-        except Exception as e:
-            return {"error": f"Failed to create pairing code: {e}"}
-
-        return {"error": "Failed to generate code"}
+        return {"error": result.get("error", "Failed to generate code")}
 
     def get_qr_url(self, code: str) -> str:
         """Get the URL to encode in QR code."""
