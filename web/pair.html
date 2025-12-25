@@ -709,27 +709,16 @@
             localStorage.setItem('cora_email', email);
             localStorage.setItem('cora_name', name);
             localStorage.setItem('cora_pairing_code', currentCode);
+            localStorage.setItem('cora_paired', 'true');
 
-            // Check if already paired (simplified flow - no email verification)
-            if (result.paired || result.success) {
-                // Save pairing info
-                if (result.user_id) localStorage.setItem('cora_user_id', result.user_id);
-                if (result.device_id) localStorage.setItem('cora_device_id', result.device_id);
-                if (result.anchor_id) localStorage.setItem('cora_anchor_id', result.anchor_id);
-                localStorage.setItem('cora_paired', 'true');
+            // Save any IDs from result
+            if (result.user_id) localStorage.setItem('cora_user_id', result.user_id);
+            if (result.device_id) localStorage.setItem('cora_device_id', result.device_id);
+            if (result.anchor_id) localStorage.setItem('cora_anchor_id', result.anchor_id);
+            if (pairingInfo && pairingInfo.anchor_id) localStorage.setItem('cora_anchor_id', pairingInfo.anchor_id);
 
-                // Skip to success!
-                showSuccess(result);
-                return;
-            }
-
-            // Fallback: Show step 3 for email verification
-            document.getElementById('sentEmail').textContent = email;
-            document.getElementById('step2').classList.add('hidden');
-            document.getElementById('step3').classList.remove('hidden');
-
-            // Start polling for completion
-            pollPairingStatus();
+            // ALWAYS go to success - no email verification needed
+            showSuccess(result.anchor_name ? result : pairingInfo || {anchor_name: 'PC Anchor'});
         }
 
         async function pollPairingStatus() {
