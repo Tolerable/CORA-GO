@@ -347,49 +347,19 @@ END;
 $fn$;
 
 -- ================================================================
--- COMMAND/STATUS TABLES (core relay tables)
+-- ANCHOR ID SUPPORT (update existing tables)
 -- ================================================================
 
--- Status table (PC anchor heartbeat)
-CREATE TABLE IF NOT EXISTS cora_status (
-    id TEXT PRIMARY KEY DEFAULT 'anchor',
-    online BOOLEAN DEFAULT false,
-    last_seen TIMESTAMPTZ DEFAULT NOW(),
-    system_info JSONB DEFAULT '{}'::JSONB,
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Commands table (mobile -> PC)
-CREATE TABLE IF NOT EXISTS cora_commands (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    command TEXT NOT NULL,
-    params JSONB DEFAULT '{}'::JSONB,
-    anchor_id TEXT DEFAULT 'anchor',
-    status TEXT DEFAULT 'pending',
-    result JSONB,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    executed_at TIMESTAMPTZ
-);
-
--- RLS for status/commands
-ALTER TABLE cora_status ENABLE ROW LEVEL SECURITY;
-ALTER TABLE cora_commands ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "Status readable" ON cora_status;
-CREATE POLICY "Status readable" ON cora_status FOR SELECT USING (true);
-DROP POLICY IF EXISTS "Status writable" ON cora_status;
-CREATE POLICY "Status writable" ON cora_status FOR ALL USING (true);
-
-DROP POLICY IF EXISTS "Commands readable" ON cora_commands;
-CREATE POLICY "Commands readable" ON cora_commands FOR SELECT USING (true);
-DROP POLICY IF EXISTS "Commands insertable" ON cora_commands;
-CREATE POLICY "Commands insertable" ON cora_commands FOR INSERT WITH CHECK (true);
-DROP POLICY IF EXISTS "Commands updatable" ON cora_commands;
-CREATE POLICY "Commands updatable" ON cora_commands FOR UPDATE USING (true);
-
--- ================================================================
--- ANCHOR ID SUPPORT (indexes)
--- ================================================================
+-- Add anchor_id column to cora_commands if not exists
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'cora_commands' AND column_name = 'anchor_id'
+    ) THEN
+        ALTER TABLE cora_commands ADD COLUMN anchor_id TEXT DEFAULT 'anchor';
+    END IF;
+END $$;
 
 -- Create index for anchor-based queries
 CREATE INDEX IF NOT EXISTS idx_cora_commands_anchor
