@@ -764,34 +764,108 @@ class BootDisplay:
         self.log_system("Try: /help, /tools, or just type naturally!")
 
     def _show_pairing(self):
-        """Show QR code pairing window for mobile device."""
-        self.log_system("Opening pairing window...")
+        """Show QR code pairing window as Toplevel (no threading issues)."""
+        self.log_system("Generating pairing code...")
 
-        def do_pairing():
+        try:
+            # Import pairing module
             try:
-                # Import pairing module
-                try:
-                    from anchor.pairing import show_pairing_window
-                except ImportError:
-                    import sys
-                    from pathlib import Path
-                    anchor_path = Path(__file__).parent.parent.parent
-                    if str(anchor_path) not in sys.path:
-                        sys.path.insert(0, str(anchor_path))
-                    from anchor.pairing import show_pairing_window
+                from anchor.pairing import pairing
+            except ImportError:
+                import sys
+                anchor_path = Path(__file__).parent.parent.parent
+                if str(anchor_path) not in sys.path:
+                    sys.path.insert(0, str(anchor_path))
+                from anchor.pairing import pairing
 
-                self.log_ok("Pairing window opened - scan QR code with your phone")
-                show_pairing_window()
-                self.log_system("Pairing window closed")
+            # Generate pairing code
+            result = pairing.generate_pairing_code()
+            if "error" in result:
+                self.log_fail(f"Pairing error: {result['error']}")
+                return
 
-            except ImportError as e:
-                self.log_warn(f"Pairing module not available: {e}")
-                self.log_system("Install qrcode: pip install qrcode[pil]")
+            code = result["code"]
+            qr_url = result["qr_url"]
+            self.log_ok(f"Pairing code: {code}")
+
+            # Create Toplevel window (uses existing Tk root)
+            pair_win = tk.Toplevel(self.root)
+            pair_win.title("CORA-GO - Pair Mobile")
+            pair_win.configure(bg='#0a0a0a')
+            pair_win.geometry("350x450")
+            pair_win.resizable(False, False)
+
+            tk.Label(pair_win, text="CORA-GO", font=('Consolas', 20, 'bold'),
+                     fg='#ff00ff', bg='#0a0a0a').pack(pady=(15, 5))
+            tk.Label(pair_win, text="Scan QR with your phone", font=('Consolas', 10),
+                     fg='#00ffff', bg='#0a0a0a').pack(pady=(0, 15))
+
+            # Load QR from free API
+            try:
+                import urllib.request
+                import urllib.parse
+                from PIL import Image, ImageTk
+                from io import BytesIO
+
+                encoded_url = urllib.parse.quote(qr_url, safe='')
+                qr_api = f"https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={encoded_url}&format=png&margin=8"
+
+                req = urllib.request.Request(qr_api)
+                with urllib.request.urlopen(req, timeout=10) as resp:
+                    qr_data = resp.read()
+
+                qr_img = Image.open(BytesIO(qr_data))
+                photo = ImageTk.PhotoImage(qr_img)
+                qr_label = tk.Label(pair_win, image=photo, bg='#ffffff')
+                qr_label.image = photo
+                qr_label.pack(pady=10)
+                self.log_ok("QR code displayed")
+
             except Exception as e:
-                self.log_fail(f"Pairing error: {e}")
+                self.log_warn(f"QR display error: {e}")
+                tk.Label(pair_win, text=f"[QR Error: {e}]", font=('Consolas', 9),
+                         fg='#ff3333', bg='#0a0a0a', wraplength=300).pack(pady=20)
 
-        # Run in thread to not block UI
-        threading.Thread(target=do_pairing, daemon=True).start()
+            # Manual code display
+            tk.Label(pair_win, text="Or enter code:", font=('Consolas', 9),
+                     fg='#888888', bg='#0a0a0a').pack(pady=(15, 5))
+            tk.Label(pair_win, text=code, font=('Consolas', 24, 'bold'),
+                     fg='#00ff88', bg='#0a0a0a').pack(pady=5)
+
+            # Status
+            status_lbl = tk.Label(pair_win, text="Waiting for mobile...",
+                                  font=('Consolas', 9, 'italic'), fg='#666666', bg='#0a0a0a')
+            status_lbl.pack(pady=15)
+
+            # URL hint
+            tk.Label(pair_win, text=qr_url.split('?')[0], font=('Consolas', 7),
+                     fg='#444444', bg='#0a0a0a').pack(pady=5)
+
+            # Poll for pairing completion
+            def check_status():
+                if not pair_win.winfo_exists():
+                    pairing.stop_pairing_poll()
+                    return
+                status = pairing.check_pairing_status(code)
+                if status.get("status") == "claimed":
+                    status_lbl.config(text="Paired!", fg='#00ff88')
+                    self.log_ok(f"Paired with mobile!")
+                    pair_win.after(2000, pair_win.destroy)
+                elif status.get("status") == "expired":
+                    status_lbl.config(text="Code expired", fg='#ff3333')
+                else:
+                    pair_win.after(2000, check_status)
+
+            pair_win.after(2000, check_status)
+
+            def on_close():
+                pairing.stop_pairing_poll()
+                pair_win.destroy()
+
+            pair_win.protocol("WM_DELETE_WINDOW", on_close)
+
+        except Exception as e:
+            self.log_fail(f"Pairing error: {e}")
 
     def set_input_callback(self, callback):
         """Set callback for user input processing."""

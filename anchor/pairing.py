@@ -5,6 +5,7 @@ Generates QR codes for mobile device pairing.
 
 import json
 import urllib.request
+import urllib.parse
 import threading
 import time
 from typing import Optional, Dict, Callable
@@ -86,33 +87,16 @@ class PairingManager:
         return f"{base_url}/web/pair.html?code={code}"
 
     def generate_qr_image(self, code: str, size: int = 200) -> Optional[bytes]:
-        """Generate QR code image as PNG bytes."""
+        """Generate QR code image as PNG bytes using free API."""
         try:
-            import qrcode
-            from io import BytesIO
+            url = self.get_qr_url(code)
+            encoded_url = urllib.parse.quote(url, safe='')
+            qr_api = f"https://api.qrserver.com/v1/create-qr-code/?size={size}x{size}&data={encoded_url}&format=png&margin=10"
 
-            qr = qrcode.QRCode(
-                version=1,
-                error_correction=qrcode.constants.ERROR_CORRECT_L,
-                box_size=10,
-                border=2,
-            )
-            qr.add_data(self.get_qr_url(code))
-            qr.make(fit=True)
+            req = urllib.request.Request(qr_api)
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                return resp.read()
 
-            img = qr.make_image(fill_color="black", back_color="white")
-
-            # Resize if needed
-            if size != 200:
-                img = img.resize((size, size))
-
-            buffer = BytesIO()
-            img.save(buffer, format="PNG")
-            return buffer.getvalue()
-
-        except ImportError:
-            print("qrcode package not installed. Install with: pip install qrcode[pil]")
-            return None
         except Exception as e:
             print(f"QR generation error: {e}")
             return None
@@ -209,26 +193,29 @@ def show_pairing_window():
     qr_frame = tk.Frame(root, bg="#1a1a1a", bd=2, relief="groove")
     qr_frame.pack(pady=10)
 
-    # Try to display QR code
+    # Load QR code from free API (no packages needed!)
     try:
-        import qrcode
         from PIL import Image, ImageTk
         from io import BytesIO
 
-        qr = qrcode.QRCode(version=1, box_size=8, border=2)
-        qr.add_data(qr_url)
-        qr.make(fit=True)
-        qr_img = qr.make_image(fill_color="black", back_color="white")
+        # Use free QR server API
+        encoded_url = urllib.parse.quote(qr_url, safe='')
+        qr_api_url = f"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={encoded_url}&format=png&margin=10"
 
-        # Convert to PhotoImage
+        req = urllib.request.Request(qr_api_url)
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            qr_data = resp.read()
+
+        qr_img = Image.open(BytesIO(qr_data))
         photo = ImageTk.PhotoImage(qr_img)
-        qr_label = tk.Label(qr_frame, image=photo, bg="#1a1a1a")
+        qr_label = tk.Label(qr_frame, image=photo, bg="#ffffff")
         qr_label.image = photo  # Keep reference
         qr_label.pack(padx=10, pady=10)
 
-    except ImportError:
+    except Exception as e:
+        print(f"QR load error: {e}")
         tk.Label(
-            qr_frame, text="[QR Code]\n\nInstall qrcode package:\npip install qrcode[pil]",
+            qr_frame, text=f"[QR Code Error]\n\n{e}",
             font=("Consolas", 10),
             fg="#888888", bg="#1a1a1a",
             width=30, height=10
