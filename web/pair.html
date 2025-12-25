@@ -611,17 +611,28 @@
                 return;
             }
 
-            // Save for later
+            // Pairing now completes immediately (no email needed)
+            if (result.paired || result.success) {
+                // Save credentials
+                localStorage.setItem('cora_email', email);
+                localStorage.setItem('cora_name', name);
+                localStorage.setItem('cora_user_id', result.user_id);
+                localStorage.setItem('cora_device_id', result.device_id);
+                localStorage.setItem('cora_anchor_id', result.anchor_id);
+                localStorage.setItem('cora_paired', 'true');
+
+                // Skip to success
+                showSuccess(result);
+                return;
+            }
+
+            // Fallback: old email flow (shouldn't happen now)
             localStorage.setItem('cora_email', email);
             localStorage.setItem('cora_name', name);
             localStorage.setItem('cora_pairing_code', currentCode);
-
-            // Show step 3
             document.getElementById('sentEmail').textContent = email;
             document.getElementById('step2').classList.add('hidden');
             document.getElementById('step3').classList.remove('hidden');
-
-            // Start polling for completion
             pollPairingStatus();
         }
 
