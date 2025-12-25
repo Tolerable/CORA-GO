@@ -304,7 +304,7 @@ def show_pairing_window():
         if "error" in result:
             status_label.config(text=result["error"], fg="#ff3333")
         else:
-            device_name = result.get('device_name', result.get('anchor_name', 'Mobile'))
+            device_name = result.get('device_name') or result.get('anchor_name') or 'Mobile'
             status_label.config(
                 text=f"CONNECTED to {device_name}!",
                 fg="#00ff88"
