@@ -1,0 +1,21 @@
+# CORA-GO Requirements
+# Core (most are optional - graceful fallback if missing)
+
+# Voice (optional)
+pyttsx3>=2.90
+
+# Audio monitoring (optional - for Sentinel)
+pyaudio>=0.2.11
+
+# Screenshot/System (optional)
+Pillow>=9.0
+
+# Speech-to-Text (optional)
+# openai-whisper>=20230314
+
+# Note: Most functionality works without these
+# Install what you need:
+#   pip install pyttsx3
+#   pip install pyaudio
+#   pip install Pillow
+#   pip install openai-whisper

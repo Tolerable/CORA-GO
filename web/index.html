@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="description" content="CORA-GO - AI Assistant PWA">
+
+    <title>CORA-GO</title>
+
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="assets/icons/icon.svg">
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+    <link rel="stylesheet" href="css/cora-go.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header id="header">
+            <div class="header-left">
+                <span class="logo">CORA-GO</span>
+            </div>
+            <div class="header-right">
+                <button id="voiceToggle" class="icon-btn" title="Toggle Voice">🔊</button>
+                <button id="settingsBtn" class="icon-btn" title="Settings">⚙️</button>
+            </div>
+        </header>
+
+        <!-- Chat Container -->
+        <main id="chatContainer">
+            <div id="messages"></div>
+        </main>
+
+        <!-- Input Area -->
+        <footer id="inputArea">
+            <div class="input-row">
+                <button id="micBtn" class="icon-btn" title="Voice Input">🎤</button>
+                <input type="text" id="userInput" placeholder="Ask CORA-GO..." autocomplete="off">
+                <button id="sendBtn" class="icon-btn" title="Send">📤</button>
+            </div>
+            <div id="status" class="status-bar">Ready</div>
+        </footer>
+
+        <!-- Settings Modal -->
+        <div id="settingsModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Settings</h2>
+                    <button class="close-btn" onclick="closeSettings()">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="setting-group">
+                        <label>Persona</label>
+                        <select id="personaSelect">
+                            <option value="default">Default</option>
+                            <option value="worker">Worker</option>
+                            <option value="sentinel">Sentinel</option>
+                            <option value="cora">CORA Classic</option>
+                        </select>
+                    </div>
+                    <div class="setting-group">
+                        <label>AI Backend</label>
+                        <select id="backendSelect">
+                            <option value="auto">Auto (Ollama → Pollinations)</option>
+                            <option value="ollama">Ollama Only</option>
+                            <option value="pollinations">Pollinations Only</option>
+                        </select>
+                    </div>
+                    <div class="setting-group">
+                        <label>Voice</label>
+                        <input type="checkbox" id="voiceEnabled" checked>
+                        <span>Enable TTS</span>
+                    </div>
+                    <div class="setting-group">
+                        <label>Wake Word</label>
+                        <input type="checkbox" id="wakeWordEnabled">
+                        <span>Listen for "Hey CORA"</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('SW registered'))
+                .catch(err => console.log('SW failed:', err));
+        }
+    </script>
+</body>
+</html>
