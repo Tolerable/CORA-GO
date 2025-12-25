@@ -469,7 +469,11 @@
             });
         }
 
+        let qrProcessed = false; // Flag to prevent multiple processing
+
         function scanWithJsQR(video) {
+            qrProcessed = false; // Reset flag
+
             // Show debug on screen
             let debugEl = document.getElementById('qrDebug');
             if (!debugEl) {
@@ -485,6 +489,8 @@
             let scanCount = 0;
 
             scanInterval = setInterval(() => {
+                if (qrProcessed) return; // Already found, stop scanning
+
                 if (video.readyState !== video.HAVE_ENOUGH_DATA) {
                     debugEl.textContent = 'Video not ready...';
                     return;
@@ -500,10 +506,18 @@
                 scanCount++;
                 debugEl.textContent = 'Scan #' + scanCount + ' | ' + canvas.width + 'x' + canvas.height + ' | ' + (code ? 'FOUND!' : 'searching...');
 
-                if (code) {
+                if (code && code.data && !qrProcessed) {
+                    qrProcessed = true; // Set flag FIRST
+                    clearInterval(scanInterval); // Stop scanning immediately
+                    scanInterval = null;
+
                     debugEl.style.background = '#0a0';
-                    debugEl.textContent = 'FOUND: ' + code.data;
-                    processQRCode(code.data);
+                    debugEl.textContent = 'FOUND: ' + code.data + ' - Processing...';
+
+                    // Small delay to ensure UI updates
+                    setTimeout(() => {
+                        processQRCode(code.data);
+                    }, 100);
                 }
             }, 200);
         }
