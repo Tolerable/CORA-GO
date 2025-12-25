@@ -182,13 +182,10 @@
         </div>
     </div>
 
-    <!-- DEBUG PANEL (hidden by default, toggle with triple-tap on logo) -->
-    <div id="debugPanel" style="display:none; position:fixed; bottom:60px; left:0; right:0; max-height:200px; overflow-y:auto; background:#000; color:#0f0; font-family:monospace; font-size:11px; padding:8px; border-top:2px solid #0f0; z-index:9999; user-select:text; -webkit-user-select:text;">
-        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-            <strong>DEBUG</strong>
-            <button onclick="document.getElementById('debugPanel').style.display='none'" style="background:#333; color:#fff; border:none; padding:2px 8px; font-size:10px;">Hide</button>
-        </div>
-        <div id="debugLog" style="user-select:text; -webkit-user-select:text;"></div>
+    <!-- DEBUG PANEL -->
+    <div id="debugPanel" style="display:none; position:fixed; top:50px; left:10px; right:10px; max-height:150px; overflow-y:auto; background:rgba(0,0,0,0.95); color:#0f0; font-family:monospace; font-size:10px; padding:5px; border:2px solid #0f0; border-radius:8px; z-index:9999; user-select:text; -webkit-user-select:text;">
+        <button onclick="document.getElementById('debugPanel').style.display='none'" style="position:absolute; top:2px; right:2px; background:#f00; color:#fff; border:none; width:24px; height:24px; border-radius:12px; font-weight:bold; font-size:14px;">X</button>
+        <div id="debugLog" style="user-select:text; -webkit-user-select:text; margin-top:20px;"></div>
     </div>
     <script>
         window.debugLog = function(msg) {
