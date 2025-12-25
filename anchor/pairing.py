@@ -377,6 +377,6 @@ if __name__ == "__main__":
 
     # Configure with EZTUNES-LIVE
     config.set("relay.url", "https://bugpycickribmdfprryq.supabase.co")
-    config.set("relay.anon_key", "sb_secret_6J4iNVJCBckqYECbbxz1OQ_248Vktk9")
+    config.set("relay.anon_key", "sb_publishable_c9Q2joJ8g7g7ntdrzbnzbA_RJfa_5jt")
 
     show_pairing_window()
