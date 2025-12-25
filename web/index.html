@@ -182,10 +182,13 @@
         </div>
     </div>
 
-    <!-- DEBUG PANEL -->
-    <div id="debugPanel" style="display:none; position:fixed; top:50px; left:10px; right:10px; max-height:150px; overflow-y:auto; background:rgba(0,0,0,0.95); color:#0f0; font-family:monospace; font-size:10px; padding:5px; border:2px solid #0f0; border-radius:8px; z-index:9999; user-select:text; -webkit-user-select:text;">
-        <button onclick="document.getElementById('debugPanel').style.display='none'" style="position:absolute; top:2px; right:2px; background:#f00; color:#fff; border:none; width:24px; height:24px; border-radius:12px; font-weight:bold; font-size:14px;">X</button>
-        <div id="debugLog" style="user-select:text; -webkit-user-select:text; margin-top:20px;"></div>
+    <!-- DEBUG PANEL - DRAGGABLE -->
+    <div id="debugPanel" style="display:none; position:fixed; top:50px; left:10px; width:300px; max-height:150px; overflow-y:auto; background:rgba(0,0,0,0.95); color:#0f0; font-family:monospace; font-size:10px; padding:5px; border:2px solid #0f0; border-radius:8px; z-index:9999; user-select:text; -webkit-user-select:text; touch-action:none;">
+        <div id="debugHeader" style="background:#0f0; color:#000; padding:4px 8px; margin:-5px -5px 5px -5px; border-radius:6px 6px 0 0; cursor:move; font-weight:bold; display:flex; justify-content:space-between; align-items:center;">
+            <span>DRAG TO MOVE</span>
+            <button onclick="document.getElementById('debugPanel').style.display='none'" style="background:#f00; color:#fff; border:none; width:28px; height:28px; border-radius:14px; font-weight:bold; font-size:16px; cursor:pointer;">X</button>
+        </div>
+        <div id="debugLog" style="user-select:text; -webkit-user-select:text;"></div>
     </div>
     <script>
         window.debugLog = function(msg) {
@@ -195,18 +198,42 @@
                 log.innerHTML += `<div>[${time}] ${msg}</div>`;
                 log.scrollTop = log.scrollHeight;
             }
-            console.log(msg);
         };
-        // Triple-tap logo to show debug panel
-        let tapCount = 0;
-        document.querySelector('.logo')?.addEventListener('click', () => {
-            tapCount++;
-            setTimeout(() => tapCount = 0, 500);
-            if (tapCount >= 3) {
-                document.getElementById('debugPanel').style.display = 'block';
-                tapCount = 0;
+        // Drag functionality
+        (function() {
+            const panel = document.getElementById('debugPanel');
+            const header = document.getElementById('debugHeader');
+            let isDragging = false, startX, startY, startLeft, startTop;
+
+            header.addEventListener('mousedown', dragStart);
+            header.addEventListener('touchstart', dragStart, {passive:false});
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('touchmove', drag, {passive:false});
+            document.addEventListener('mouseup', dragEnd);
+            document.addEventListener('touchend', dragEnd);
+
+            function dragStart(e) {
+                if (e.target.tagName === 'BUTTON') return;
+                isDragging = true;
+                const touch = e.touches ? e.touches[0] : e;
+                startX = touch.clientX;
+                startY = touch.clientY;
+                startLeft = panel.offsetLeft;
+                startTop = panel.offsetTop;
+                e.preventDefault();
             }
-        });
+            function drag(e) {
+                if (!isDragging) return;
+                const touch = e.touches ? e.touches[0] : e;
+                panel.style.left = (startLeft + touch.clientX - startX) + 'px';
+                panel.style.top = (startTop + touch.clientY - startY) + 'px';
+                panel.style.right = 'auto';
+                e.preventDefault();
+            }
+            function dragEnd() { isDragging = false; }
+        })();
+        // Show debug panel on load
+        document.getElementById('debugPanel').style.display = 'block';
     </script>
 
     <script src="js/relay.js"></script>
