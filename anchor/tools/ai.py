@@ -127,7 +127,40 @@ def ask_with_tools(prompt: str, system: Optional[str] = None) -> dict:
     return query_pollinations(prompt, system=system, tools=tools)
 
 
+def generate_image(prompt: str, width: int = 1024, height: int = 1024) -> dict:
+    """Generate an image using Pollinations.ai (free, no API key)."""
+    try:
+        # Pollinations image API - just encode prompt in URL
+        encoded = urllib.parse.quote(prompt)
+        image_url = f"https://image.pollinations.ai/prompt/{encoded}?width={width}&height={height}&nologo=true"
+
+        return {
+            "url": image_url,
+            "prompt": prompt,
+            "width": width,
+            "height": height,
+            "message": f"Image generated: {image_url}"
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+
 # Register tools
+register_tool(
+    name="generate_image",
+    description="Generate an image from a text description using AI",
+    parameters={
+        "type": "object",
+        "properties": {
+            "prompt": {"type": "string", "description": "Description of the image to generate"},
+            "width": {"type": "integer", "description": "Image width (default 1024)", "default": 1024},
+            "height": {"type": "integer", "description": "Image height (default 1024)", "default": 1024},
+        },
+        "required": ["prompt"],
+    },
+    func=generate_image,
+)
+
 register_tool(
     name="check_ollama",
     description="Check if local Ollama AI is running",

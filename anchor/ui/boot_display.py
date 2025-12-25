@@ -703,6 +703,16 @@ class BootDisplay:
                     words = text_lower.replace('speak', '').replace('say', '').strip()
                     result = execute_tool('speak', {'text': words or text})
                     self.log_result("Speaking...")
+                elif any(w in text_lower for w in ['image', 'picture', 'photo', 'draw', 'generate', 'show me']):
+                    # Extract prompt - remove trigger words
+                    prompt = text
+                    for w in ['generate', 'create', 'make', 'draw', 'show me', 'a picture of', 'an image of', 'a photo of']:
+                        prompt = prompt.lower().replace(w, '').strip()
+                    result = execute_tool('generate_image', {'prompt': prompt or text})
+                    if isinstance(result, dict) and 'url' in result:
+                        self.log_ok(f"Image: {result['url']}")
+                    else:
+                        self.log_result(str(result))
                 else:
                     # Try AI query
                     result = execute_tool('ask_ai', {'prompt': text})
