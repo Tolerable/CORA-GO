@@ -26,13 +26,21 @@ from anchor.tools.system import system_info
 from anchor.tools.ai import check_ollama
 
 
-# ANSI colors for terminal
+# ANSI colors for terminal (enable on Windows)
+import os
+os.system('')  # Enable ANSI on Windows
+
 class C:
     OK = "\033[92m"      # Green
     WARN = "\033[93m"    # Yellow
     FAIL = "\033[91m"    # Red
     INFO = "\033[94m"    # Blue
     END = "\033[0m"
+
+def strip_ansi(text: str) -> str:
+    """Remove ANSI escape codes from text."""
+    import re
+    return re.sub(r'\033\[[0-9;]*m', '', text)
 
 
 def print_status(name: str, ok: bool, detail: str = ""):
@@ -59,7 +67,7 @@ def run_diagnostics(quiet: bool = False, display=None) -> Tuple[List[str], List[
         """Log to both terminal and display."""
         print(msg)
         if display:
-            display.log(msg, level)
+            display.log(strip_ansi(msg), level)
 
     def update_phase(name, status, msg=""):
         """Update phase in display if available."""
